@@ -5,6 +5,10 @@ notes to developers and are not actually part of the user story.
 from django.test import LiveServerTestCase
 from selenium import webdriver
 
+# Constants. Since the name of the store is yet to be decided, it'll be stored
+# in variables for easy future change
+SITE_NAME = 'CatFood'
+
 class FoodItemsTestCase(LiveServerTestCase):
     """
     Test case wich realates to the listing and detail of items.
@@ -32,12 +36,20 @@ class FoodItemsTestCase(LiveServerTestCase):
         # in.
 
         # This is when she rememebers that her friend Kenny told her about this
-        # awesome new website, called 'CatFood', located at <url>.
+        # awesome new website, called '<SITE_NAME>', located at <url>.
 
-        # So she opens her laptop and visits the homepage of 'CatFood'
+        # So she opens her laptop and visits the homepage of '<SITE_NAME>'
+        home_page = self.browser.get(self.live_server_url + '/')
 
+        # She knows she's on the right page because it says '<SITE_NAME>' in the
+        # title and the headin
+        self.assertIn(SITE_NAME, self.browser.title)
+        heading = self.browser.find_element_by_tag_name('h1')
+        self.assertIn(SITE_NAME, heading.text)
+        
         # She is preseted a variety of foods and drinks. She notices that
         # there is a "Chicken Breast" option.
+        self.fail('Finish the test')
 
         # Catherine knows that it has a lot of protein, but he knows exacty
         # how much. So she clicks on "Chicken Breast".
