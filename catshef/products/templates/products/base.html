@@ -11,9 +11,9 @@
 <script type="application/x-javascript"> addEventListener("load", function() { setTimeout(hideURLbar, 0); }, false);
 function hideURLbar(){ window.scrollTo(0,1); } </script>
 <!-- //for-mobile-apps -->
-<link href="css/bootstrap.css" rel='stylesheet' type='text/css' />
+<link href="{% static "css/bootstrap.css" %}" rel='stylesheet' type='text/css' />
 <!-- Custom Theme files -->
-<link href="css/style.css" rel='stylesheet' type='text/css' />
+<link href="{% static "css/style.css" %}" rel='stylesheet' type='text/css' />
 <!-- js -->
    <script src="{% static "js/jquery-1.11.1.min.js" %}"></script>
 <!-- //js -->
@@ -66,7 +66,7 @@ function hideURLbar(){ window.scrollTo(0,1); } </script>
         <div class="container">
             
             <div class="logo">
-                <h1 ><a href="index.html"><b>T<br>H<br>E</b>Big Store<span>The Best Supermarket</span></a></h1>
+                <h1 ><a href="index.html"><b>T<br>H<br>E</b>{{ site_name }}<span>Your order, we deliver</span></a></h1>
             </div>
             <div class="head-t">
                 <ul class="card">
@@ -347,9 +347,9 @@ function hideURLbar(){ window.scrollTo(0,1); } </script>
     <a href="#" id="toTop" style="display: block;"> <span id="toTopHover" style="opacity: 1;"> </span></a>
 <!-- //smooth scrolling -->
 <!-- for bootstrap working -->
-        <script src="js/bootstrap.js"></script>
+        <script src="{% static "js/bootstrap.js" %}"></script>
 <!-- //for bootstrap working -->
-<script type='text/javascript' src="js/jquery.mycart.js"></script>
+<script type='text/javascript' src="{% static "js/jquery.mycart.js" %}"></script>
   <script type="text/javascript">
   $(function () {
 

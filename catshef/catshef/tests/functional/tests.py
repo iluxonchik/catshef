@@ -2,8 +2,10 @@
 Functional tests. "#" is used for user story comments and "##" is used for 
 notes to developers and are not actually part of the user story.
 """
+import pdb
 from django.test import LiveServerTestCase
 from selenium import webdriver
+
 
 # Constants. Since the name of the store is yet to be decided, it'll be stored
 # in variables for easy future change
