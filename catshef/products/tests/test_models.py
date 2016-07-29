@@ -21,9 +21,20 @@ class ProductsModelTestCase(TestCase):
             slug='chicken-breast',
             description='Chicken breast. Yes, chicken breast.',
             stock=120,
+            price=10,
+            offer_price=5,
             available=True)
 
+        self.product2 = Product.objects.create(
+            name='Turkey Breast',
+            slug='turkey-breast',
+            description='Turkey Breast. Yes, that\'s right',
+            stock=42,
+            price=20)
+
         self.product1.categories.add(self.cat1)
+
+        self.product2.categories.add(self.cat1)
 
         self.prod_img = ProductImage.objects.create(image=SimpleUploadedFile(
                 name='product1_img.jpg',
@@ -33,6 +44,9 @@ class ProductsModelTestCase(TestCase):
 
         self.product1.main_image = self.prod_img
         self.product1.save()
+
+        self.product2.main_image = self.prod_img
+        self.product2.save()
 
         # TODO: test OrderField (when needed in FT)
 
@@ -69,3 +83,16 @@ class ProductsModelTestCase(TestCase):
         # Test __str()__ returns expected name
         self.assertEqual(str(self.product1), 'Chicken Breast')
         self.assertEqual(str(self.cat1), 'meat')
+
+    def test_product_price_and_offer(self):
+        self.assertEqual(self.product1.current_price, 5, 'Offer price was '
+                                                'not returned correctly.')
+        self.assertEquals(self.product1.discount_percentage, 50, 'Discount'
+            ' percentage was not computed correctly.')
+
+        self.product2.discount_percentage = 20
+        self.assertEquals(self.product2.discount_percentage, 20, 'Discount'
+            ' percentage was not stored correctly.')
+        # 20 * 0.8 = 16
+        self.assertEquals(self.product2.current_price, 16, 'Offer price was '
+            'not returned correctly.')
