@@ -29,6 +29,10 @@ ALLOWED_HOSTS = []
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
+# local path where the files will be stored
+MEDIA_URL = '/media/'
+# local path where the files will be stored
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 # Application definition
 
