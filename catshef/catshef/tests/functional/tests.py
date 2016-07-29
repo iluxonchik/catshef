@@ -51,11 +51,23 @@ class FoodItemsTestCase(LiveServerTestCase):
         
         # She is preseted a variety of foods and drinks. She notices that
         # there is a "Chicken Breast" option.
-        self.fail('Finish the test')
+        products_container = self.browser.find_element_by_css_selector(
+                                                        '#products-main.con-w3l')
+        self.assertIsNotNone(products_container)
+
+        products = products_container.find_elements_by_xpath(
+                                    '//div[@class="col-md-3 m-wthree"]//h6/a')
+
+        any('Chicken Breast' in product.text for product in products)
+
 
         # Catherine knows that it has a lot of protein, but he knows exacty
         # how much. So she clicks on "Chicken Breast".
-
+        chicken_breast = [product for product in products 
+                                        if 'Chicken Breast' in product.text][0]
+        chicken_breast.click()
+        
+        self.fail('Finish the test')
         # After that she's taken to a new page, which shows the details for
         # the product.
 
