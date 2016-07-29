@@ -19,3 +19,6 @@ tests/report/
 
 # SQLite datatbase
 *.sqlite3
+
+# Project-specific
+media/
