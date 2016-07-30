@@ -27,6 +27,8 @@ class Product(models.Model):
     # in template rendering (decide)
     main_image = models.ForeignKey('ProductImage', 
         related_name='main_image_of', null=True, on_delete=models.SET_NULL)
+    nutrition = models.ForeignKey('ProductNutrition', 
+        on_delete=models.SET_NULL, null=True, blank=True)
     available = models.BooleanField(default=True)
     created = models.DateField(auto_now_add=True)
     updated = models.DateField(auto_now=True)
@@ -87,6 +89,32 @@ class Product(models.Model):
         otherwise.
         """
         return self.offer_price and self.offer_price < self.price
+
+    @property
+    def protein(self):
+        return self.nutrition.protein
+
+    @property
+    def carbs(self):
+        return self.nutrition.carbs
+
+    @property
+    def fat(self):
+        return self.nutrition.fat
+
+    @property
+    def calories(self):
+        return self.nutrition.calories
+
+    @property
+    def nutrition_dict(self):
+        return {'protein': self.nutrition.protein, 
+                'carbs': self.nutrition.carbs,
+                'fat': self.nutrition.fat,
+                'calories': self.nutrition.calories,
+                }
+    
+    
     
     
 
@@ -95,3 +123,18 @@ class ProductImage(models.Model):
     image = models.ImageField(upload_to='products/%Y/%m/%d/')
     product = models.ForeignKey('Product', related_name='images')
     # TODO: Order field
+
+class ProductNutrition(models.Model):
+    __PROT_CAL = __CARB_CAL = 4
+    __FAT_CAL = 9
+
+    protein = models.DecimalField(max_digits=10, decimal_places=2)
+    carbs = models.DecimalField(max_digits=10, decimal_places=2)
+    fat = models.DecimalField(max_digits=10, decimal_places=2)
+    calories = models.DecimalField(max_digits=10, decimal_places=2, null=True, 
+        blank=True)
+
+    def save(self, *args, **kwargs):
+        if self.calories is None:
+            self.calories = type(self).__PROT_CAL * self.protein + type(self).__CARB_CAL * self.carbs + type(self).__FAT_CAL * self.fat
+        super(ProductNutrition, self).save(*args, **kwargs)

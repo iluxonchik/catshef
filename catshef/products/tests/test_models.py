@@ -3,7 +3,7 @@ import pdb
 from django.test import TestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from products.models import Product, Category, ProductImage
+from products.models import Product, Category, ProductImage, ProductNutrition
 
 class ProductsModelTestCase(TestCase):
     
@@ -32,8 +32,15 @@ class ProductsModelTestCase(TestCase):
             stock=42,
             price=20)
 
-        self.product1.categories.add(self.cat1)
+        self.product_nutrition1 = ProductNutrition.objects.create(protein=100, 
+            carbs=1, fat=1, calories=413)
 
+        self.product_nutrition2 = ProductNutrition.objects.create(protein=100,
+            carbs=1, fat=1)
+
+        self.product1.nutrition = self.product_nutrition1
+
+        self.product1.categories.add(self.cat1)
         self.product2.categories.add(self.cat1)
 
         self.prod_img = ProductImage.objects.create(image=SimpleUploadedFile(
@@ -87,6 +94,31 @@ class ProductsModelTestCase(TestCase):
         # Test __str()__ returns expected name
         self.assertEqual(str(self.product1), 'Chicken Breast')
         self.assertEqual(str(self.cat1), 'meat')
+
+    def test_product_nutrition(self):
+        prod_nutr = self.product1.nutrition
+        self.assertEqual(prod_nutr, self.product_nutrition1)
+
+        self.assertEquals(prod_nutr.protein, self.product1.protein)
+        self.assertEquals(prod_nutr.carbs, self.product1.carbs)
+        self.assertEquals(prod_nutr.fat, self.product1.fat)
+        self.assertEquals(prod_nutr.calories, self.product1.calories)
+        
+        self.assertEquals(prod_nutr.protein, 100)
+        self.assertEquals(prod_nutr.carbs, 1)
+        self.assertEquals(prod_nutr.fat, 1)
+        self.assertEquals(prod_nutr.calories, 413)
+
+        nutrition_dict = self.product1.nutrition_dict
+        self.assertEquals(nutrition_dict['protein'], self.product1.protein)
+        self.assertEquals(nutrition_dict['carbs'], self.product1.carbs)
+        self.assertEquals(nutrition_dict['fat'], self.product1.fat)
+        self.assertEquals(nutrition_dict['calories'], self.product1.calories)
+
+        # Make sure that the caloric content is automatically computed, and 
+        # added to the model if it's ommited during the object creation
+        self.assertEquals(self.product_nutrition2.calories, 413)
+
 
     def test_product_price_and_offer(self):
         self.assertEqual(self.product1.current_price, 5, 'Offer price was '
