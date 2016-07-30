@@ -34,6 +34,15 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
+
+    @property
+    def main_image_url(self):
+        """
+        Shorthand for the main image url
+        """
+        return self.main_image.image.url
+
+
     @property
     def current_price(self):
         """
@@ -45,7 +54,7 @@ class Product(models.Model):
         computation less verbose (basically avoiding many if's, which can cause 
         bugs, if it's ommited in some place by mistake).
         """
-        if self.offer_price and self.offer_price < self.price:
+        if self.has_offer:
             return self.offer_price
         return self.price
 
@@ -56,7 +65,7 @@ class Product(models.Model):
 
         Note: if offer_price >= price, 0 will be returned
         """
-        if self.offer_price and self.offer_price < self.price:
+        if self.has_offer:
             return 100 - (self.offer_price * 100 / self.price)
 
     @discount_percentage.setter
@@ -70,6 +79,15 @@ class Product(models.Model):
             youcwould write: 'product.discount_percentage=30'.
         """
         self.offer_price = self.price * (100 - percent)/100
+
+    @property
+    def has_offer(self):
+        """
+        Returns True if the product has a valid offer price and False
+        otherwise.
+        """
+        return self.offer_price and self.offer_price < self.price
+    
     
 
 class ProductImage(models.Model):

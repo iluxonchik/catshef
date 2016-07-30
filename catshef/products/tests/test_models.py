@@ -68,6 +68,11 @@ class ProductsModelTestCase(TestCase):
             'Chicken breast. Yes, chicken breast.')
         self.assertEqual(self.product1.stock, 120)
         self.assertTrue(self.product1.available)
+
+        self.assertEqual(self.product1.main_image_url, 
+            self.product1.main_image.image.url,
+            '\'main_image_url\' shorthand in Product model did not match the ' 
+            'actual main image url')
         
         # Test adding multiple categories to a product        
         high_protein = self.product1.categories.create(name='high protein',
@@ -78,7 +83,6 @@ class ProductsModelTestCase(TestCase):
         self.assertEqual(len(self.product1.categories.all()), 2)
         self.assertIn(high_protein, self.product1.categories.all())
         self.assertEqual(high_protein.parent, self.cat1)
-
 
         # Test __str()__ returns expected name
         self.assertEqual(str(self.product1), 'Chicken Breast')
