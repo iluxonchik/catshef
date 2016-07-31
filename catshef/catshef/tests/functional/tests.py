@@ -72,6 +72,36 @@ class FoodItemsTestCase(LiveServerTestCase):
 
         url_before_click = self.browser.current_url
 
+        # Se notices that 'Chicken Breast' has a 50% discount on it
+        offer_imgs = self.browser.find_elements_by_xpath(
+            '//a[@class="offer-img"]')
+
+
+        self.assertIsNotNone(offer_imgs, 'Offer images not found')
+        cb_offer_img = [img for img in offer_imgs 
+                            if img.find_element_by_tag_name('img').get_attribute('alt') == 'Chicken Breast']
+        self.assertEqual(len(cb_offer_img), 1, 
+            'Single image with alt "Chicken Breast" not found')
+
+        cb_offer_img_parent = cb_offer_img[0].find_element_by_xpath('..')
+
+        offer_text = cb_offer_img_parent.find_element_by_xpath('.//div[@class="offer"]').text
+        self.assertEquals('-50%', offer_text)
+
+        # "Turkey Breast" doesn't have a discount price, so it's not present
+        # there
+
+        tb_offer_img = [img for img in offer_imgs 
+                            if img.find_element_by_tag_name('img').get_attribute('alt') == 'Turkey Breast']
+        self.assertEqual(len(cb_offer_img), 1, 
+            'Single image with alt "Turkey Breast" not found')
+
+        tb_offer_img_parent = tb_offer_img[0].find_element_by_xpath('..')
+        
+        with self.assertRaises(exceptions.NoSuchElementException):
+            offer_text = tb_offer_img_parent.find_element_by_xpath('.//div[@class="offer"]').text
+
+
         # Catherine knows that it has a lot of protein, but he knows exacty
         # how much.
 
@@ -110,10 +140,8 @@ class FoodItemsTestCase(LiveServerTestCase):
 
         ## Make sure the modal closed, by making sure that there is no open
         ## modal present
-
         with self.assertRaises(exceptions.NoSuchElementException):
             self.browser.find_element_by_xpath('//div[@aria-hidden="false"]')
-
 
         self.fail('Finish the test')
 
