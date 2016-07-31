@@ -128,10 +128,10 @@ class ProductNutrition(models.Model):
     __PROT_CAL = __CARB_CAL = 4
     __FAT_CAL = 9
 
-    protein = models.DecimalField(max_digits=10, decimal_places=2)
-    carbs = models.DecimalField(max_digits=10, decimal_places=2)
-    fat = models.DecimalField(max_digits=10, decimal_places=2)
-    calories = models.DecimalField(max_digits=10, decimal_places=2, null=True, 
+    protein = models.DecimalField(max_digits=10, decimal_places=1)
+    carbs = models.DecimalField(max_digits=10, decimal_places=1)
+    fat = models.DecimalField(max_digits=10, decimal_places=1)
+    calories = models.DecimalField(max_digits=10, decimal_places=1, null=True, 
         blank=True)
 
     def save(self, *args, **kwargs):
