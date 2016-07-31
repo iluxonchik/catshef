@@ -5,9 +5,10 @@ notes to developers and are not actually part of the user story.
 import pdb
 from django.test import LiveServerTestCase
 from selenium import webdriver
+from selenium.common import exceptions
 
 from django.core.files.uploadedfile import SimpleUploadedFile
-from products.models import Product, Category, ProductImage
+from products.models import Product, Category, ProductImage, ProductNutrition
 
 
 # Constants. Since the name of the store is yet to be decided, it'll be stored
@@ -64,19 +65,63 @@ class FoodItemsTestCase(LiveServerTestCase):
         any('Chicken Breast' in product.text for product in products)
 
         image_container = products_container.find_element_by_xpath(
-            '//img[@class="img-responsive"]')
+            '//a[@data-target="#myModal1"]//img[@class="img-responsive"]')
 
         self.assertIsNotNone(image_container)
         self.assertIsNotNone(image_container.get_attribute('src'))
 
-        # pdb.set_trace()
+        url_before_click = self.browser.current_url
 
         # Catherine knows that it has a lot of protein, but he knows exacty
-        # how much. So she clicks on "Chicken Breast".
+        # how much.
+
+        # She clicks on the image and after that shes's presented with a 
+        # quick overview of the product, within the same page.
+        image_href = image_container.find_element_by_xpath('..')
+        image_href.click()
+
+        body = self.browser.find_element_by_tag_name('body')
+        body_class = body.get_attribute('class')
+        self.assertEquals(body_class, 'modal-open')
+        self.assertEqual(url_before_click, self.browser.current_url)
+
+        active_modal = self.browser.find_element_by_xpath('//div[@aria-hidden="false"]')
+        self.assertIsNotNone(active_modal, 'Active modal not found')
+
+        # She notices that the product has 31g of protein, "0g" of
+        # carbohydrates, 3.6g of carbs and 165 calories.
+        nutr_p = active_modal.find_element_by_xpath(
+            '//p[@class="in-para"]')
+        self.assertIsNotNone(nutr_p, 'Nutritional info not found '
+                                                        'in the modal')
+        nutr_info = nutr_p.text
+
+        self.assertIn('Protein: 31g', nutr_info)
+        self.assertIn('Carbs: 0g', nutr_info)
+        self.assertIn('Fat: 3.6g', nutr_info)
+        self.assertIn('Calories: 165', nutr_info)
+
+        # After that, she clicks on the 'X' to close the modal
+        close_btn = active_modal.find_element_by_xpath(
+            '//button[@class="close"]')
+
+        close_btn.click()
+        self.browser.implicitly_wait(3)
+
+        ## Make sure the modal closed, by making sure that there is no open
+        ## modal present
+
+        with self.assertRaises(exceptions.NoSuchElementException):
+            self.browser.find_element_by_xpath('//div[@aria-hidden="false"]')
+
+
+        self.fail('Finish the test')
+
+
+        # So she clicks on "Chicken Breast".
         chicken_breast = [product for product in products 
                                         if 'Chicken Breast' in product.text][0]
         chicken_breast.click()
-        self.fail('Finish the test')
         # After that she's taken to a new page, which shows the details for
         # the product.
 
@@ -171,3 +216,11 @@ class FoodItemsTestCase(LiveServerTestCase):
 
         self.product2.main_image = self.prod_img
         self.product2.save()
+
+
+        self.product1_nutrition = ProductNutrition.objects.create(protein=31, 
+            carbs=0, fat=3.6, calories=165)
+
+        self.product1.nutrition = self.product1_nutrition
+
+        self.product1.save()

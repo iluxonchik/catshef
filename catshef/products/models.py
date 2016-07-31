@@ -113,10 +113,6 @@ class Product(models.Model):
                 'fat': self.nutrition.fat,
                 'calories': self.nutrition.calories,
                 }
-    
-    
-    
-    
 
 class ProductImage(models.Model):
     # image will be uploaded to MEDIA_ROOT/products/%Y/%m/%d/

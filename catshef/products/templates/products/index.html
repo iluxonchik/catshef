@@ -68,7 +68,7 @@
 <!-- Modals -->
  {% for product in products %}
     {% comment %}
-        this could've been done in the for loop above, but this way, the generated HTML will be more organized
+        this could've been done in the for loop above, but this way, the generated HTML will be more organized.
     {% endcomment %}
     <div class="modal fade" id="myModal{{ forloop.counter }}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
     <div class="modal-dialog" role="document">
@@ -84,10 +84,14 @@
                     </div>
                     <div class="col-md-7 span-1 ">
                         <h3>{{ product }}</h3>
-                        {% comment %}
-                            TODO: do we need this part?
-                            <p class="in-para"> There are many variations of passages of Lorem Ipsum.</p>
-                        {% endcomment %}
+
+                        {% if product.nutrition %}
+                            <p class="in-para">Nutritional info per 100g: <br /> 
+                            <strong>Protein: </strong> {{ product.protein|floatformat:"-1" }}g 
+                            <strong>Carbs: </strong> {{ product.carbs|floatformat:"-1"}}g <strong>Fat: </strong> {{ product.fat|floatformat:"-1" }}g 
+                            <strong>Calories: </strong> {{ product.calories|floatformat:"-1" }} </p>
+                        {% endif %}
+                        
                         <div class="price_single">
                           <span class="reducedfrom ">
                             {% if product.has_offer %}<del>{{ product.price }}</del>{% endif %}{{ product.current_price }}
