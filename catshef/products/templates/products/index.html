@@ -39,11 +39,11 @@
                                     </a>
                                     <div class="mid-1">
                                         <div class="women">
-                                            <h6><a href="single.html">{{ product }}</a></h6>                          
+                                            <h6><a href="{{ product.get_absolute_url }}">{{ product }}</a></h6>       
                                         </div>
                                         <div class="mid-2">
                                             <p>
-                                            {% if product.has_offer %}<label>€{{ product.price }}</label>{% endif %}<em class="item_price">€{{ product.current_price }}</em>
+                                            {% if product.has_offer %}<label>&euro;{{ product.price }}</label>{% endif %}<em class="item_price">&euro;{{ product.current_price }}</em>
                                             </p>
                                               <div class="block">
                                                 <div class="starbox small ghosting"><div class="positioner"><div class="stars"><div class="ghost" style="width: 42.5px; display: none;"></div><div class="colorbar" style="width: 42.5px;"></div><div class="star_holder"><div class="star star-0"></div><div class="star star-1"></div><div class="star star-2"></div><div class="star star-3"></div><div class="star star-4"></div></div></div></div></div>

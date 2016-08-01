@@ -2,6 +2,7 @@ import pdb
 
 from django.test import TestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.urlresolvers import reverse
 
 from products.models import Product, Category, ProductImage, ProductNutrition
 
@@ -31,6 +32,15 @@ class ProductsModelTestCase(TestCase):
             description='Turkey Breast. Yes, that\'s right',
             stock=42,
             price=20)
+
+        # Product without image or nutrition or offer_price
+        self.product3 = Product.objects.create(
+            name='Entire Chicken',
+            slug='entire-chicken',
+            description=('An entire chicken. This product does not have a main '
+                'image'),
+            stock=123,
+            price=321)
 
         self.product_nutrition1 = ProductNutrition.objects.create(protein=100, 
             carbs=1, fat=1, calories=413)
@@ -95,6 +105,11 @@ class ProductsModelTestCase(TestCase):
         self.assertEqual(str(self.product1), 'Chicken Breast')
         self.assertEqual(str(self.cat1), 'meat')
 
+        # Make sure the urls are returned correctly
+        self.assertEqual(self.product1.get_absolute_url(), 
+            reverse('products:product_detail', 
+                kwargs= {'slug': self.product1.slug}))
+
     def test_product_nutrition(self):
         prod_nutr = self.product1.nutrition
         self.assertEqual(prod_nutr, self.product_nutrition1)
@@ -132,3 +147,14 @@ class ProductsModelTestCase(TestCase):
         # 20 * 0.8 = 16
         self.assertEquals(self.product2.current_price, 16, 'Offer price was '
             'not returned correctly.')
+
+    def test_product_nullables(self):
+        """
+        Tests the helpers behaviour when facint with null values. Basically
+        tests the field that have 'null=True'
+        """
+        self.assertIsNone(self.product3.main_image)
+        self.assertIsNone(self.product3.protein)
+        self.assertIsNone(self.product3.fat)
+        self.assertIsNone(self.product3.carbs)
+        self.assertIsNone(self.product3.calories)

@@ -1,5 +1,6 @@
 from django.test import TestCase, RequestFactory
 from products.views import index, product_detail
+from django.core.urlresolvers import reverse
 from products.models import Product, Category
 
 class CatShefBaseTestCase(TestCase):
@@ -63,18 +64,25 @@ class ProductDetailTestCase(CatShefBaseTestCase):
         Teset that the product detail view returns a 200 response, uses
         the correct template and has the correct context.
         """
-        request = self.factory.get('product/chicken-breast/')
+        request = self.factory.get('/product/chicken-breast/')
 
         with self.assertTemplateUsed('products/detail.html'):
             response = product_detail(request, slug='chicken-breast')
-            context = response.context
-            self.assertIsNotNone(context['product'], 'Product not found in '
-                'context.')
-            self.assertEqual(context['product'], Product.objects.get(
-                slug='chicken-breast'))
+
             self.assertEqual(response.status_code, 200)
             page = response.content.decode()
             price_html = ('<div class="pr-single"><p class="reduced">'
-                                            '<del>$10.00</del>$5.00</p></div>')
+                                '<del>&euro;10.00</del>&euro;5.00</p></div>')
             self.assertInHTML(price_html, page)
             self.assertInHTML('<h3>Chicken Breast</h3>', page)
+
+    def test_product_passed_in_context(self):
+        """
+        Test that the expected product is passed in the context.
+        """
+        response = self.client.get('/product/chicken-breast/')
+        context = response.context
+        self.assertIsNotNone(context['product'], 'Product not found in '
+                'context.')
+        self.assertEqual(context['product'], Product.objects.get(
+                slug='chicken-breast'))

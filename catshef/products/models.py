@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.urlresolvers import reverse
 
 
 class Category(models.Model):
@@ -16,7 +17,7 @@ class Product(models.Model):
     Represents a product that's being sold.
     """
     name = models.CharField(max_length=250)
-    slug = models.SlugField()
+    slug = models.SlugField(unique=True, db_index=True)
     description = models.TextField()
     categories = models.ManyToManyField('Category', related_name='products')
     stock = models.PositiveSmallIntegerField()  # range: [0, 32767]
@@ -33,6 +34,9 @@ class Product(models.Model):
     created = models.DateField(auto_now_add=True)
     updated = models.DateField(auto_now=True)
 
+    def get_absolute_url(self):
+        return reverse('products:product_detail', kwargs={'slug': self.slug})
+
     def __str__(self):
         return self.name
 
@@ -42,6 +46,8 @@ class Product(models.Model):
         """
         Shorthand for the main image url
         """
+        if not self.main_image:
+            return None
         return self.main_image.image.url
 
 
@@ -92,22 +98,32 @@ class Product(models.Model):
 
     @property
     def protein(self):
+        if not self.nutrition:
+            return None
         return self.nutrition.protein
 
     @property
     def carbs(self):
+        if not self.nutrition:
+            return None
         return self.nutrition.carbs
 
     @property
     def fat(self):
+        if not self.nutrition:
+            return None
         return self.nutrition.fat
 
     @property
     def calories(self):
+        if not self.nutrition:
+            return None
         return self.nutrition.calories
 
     @property
     def nutrition_dict(self):
+        if not self.nutrition:
+            return None
         return {'protein': self.nutrition.protein, 
                 'carbs': self.nutrition.carbs,
                 'fat': self.nutrition.fat,

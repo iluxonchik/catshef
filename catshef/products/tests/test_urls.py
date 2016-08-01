@@ -18,7 +18,8 @@ class ProductsURLsTestCase(TestCase):
         function.
         """
         product_detail = resolve('/product/chicken-breast/')
-        self.assertEqual(product_detail.view_name, 'product_detail')
+        self.assertEqual(product_detail.view_name,
+            'products:product_detail')
         self.assertEqual(product_detail.func.__name__, 'product_detail')
         self.assertEqual(product_detail.kwargs['slug'], 'chicken-breast')
 

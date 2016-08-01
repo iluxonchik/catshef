@@ -8,6 +8,8 @@ from selenium import webdriver
 from selenium.common import exceptions
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.urlresolvers import reverse
+
 from products.models import Product, Category, ProductImage, ProductNutrition
 
 
@@ -143,7 +145,6 @@ class FoodItemsTestCase(LiveServerTestCase):
         with self.assertRaises(exceptions.NoSuchElementException):
             self.browser.find_element_by_xpath('//div[@aria-hidden="false"]')
 
-        self.fail('Finish the test')
 
 
         # So she clicks on "Chicken Breast".
@@ -152,7 +153,12 @@ class FoodItemsTestCase(LiveServerTestCase):
         chicken_breast.click()
         # After that she's taken to a new page, which shows the details for
         # the product.
+        self.assertEqual(self.browser.current_url,
+            self.live_server_url + reverse('products:product_detail',
+                kwargs={'slug': 'chicken-breast'}))
 
+        self.fail('Finish the test')
+        
         # She notices that there are a couple of images of the product and that
         # she can switch between them.
 
