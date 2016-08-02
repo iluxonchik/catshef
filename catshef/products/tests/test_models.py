@@ -10,6 +10,8 @@ class ProductsModelTestCase(TestCase):
     
     def setUp(self):
         image_path = 'products/tests/resources/img/chicken_breast.jpg'
+        another_image_path = 'products/tests/resources/img/chicken_breast2.jpg'
+
         
         self.cat1 = Category.objects.create(
             name='meat', 
@@ -55,6 +57,13 @@ class ProductsModelTestCase(TestCase):
 
         self.prod_img = ProductImage.objects.create(image=SimpleUploadedFile(
                 name='product1_img.jpg',
+                content=open(image_path, 'rb').read(),
+                content_type='image/jpeg'),
+                product=self.product1)        
+
+        self.another_product_image = ProductImage.objects.create(
+                image=SimpleUploadedFile(
+                name='product1_img2.jpg',
                 content=open(image_path, 'rb').read(),
                 content_type='image/jpeg'),
                 product=self.product1)
@@ -158,3 +167,22 @@ class ProductsModelTestCase(TestCase):
         self.assertIsNone(self.product3.fat)
         self.assertIsNone(self.product3.carbs)
         self.assertIsNone(self.product3.calories)
+
+    def test_product_helpers(self):
+        """
+        Test various helper methods of the Product model.
+        """
+        # get_all_images() testing
+        images = self.product1.get_all_images()
+        self.assertIsNotNone(images, 'Image list is None')
+        self.assertEqual(len(images), 2)
+        self.assertIn(self.another_product_image, images)
+        self.assertIsNone(self.product2.get_all_images())
+        
+        # get_images() testing
+        images = self.product1.get_images()
+        self.assertIsNotNone(images, 'Image list is None')
+        self.assertEqual(len(images), 1)
+        self.assertEqual(images[0], self.another_product_image)
+        self.assertIsNone(self.product2.get_images())
+
