@@ -17,6 +17,21 @@ function hideURLbar(){ window.scrollTo(0,1); } </script>
 <!-- js -->
    <script src="{% static "js/jquery-1.11.1.min.js" %}"></script>
 <!-- //js -->
+
+<!-- Owl Carousel Setup -->
+<!-- Important Owl stylesheet -->
+<link rel="stylesheet" href="{% static "owl-carousel/owl.carousel.css" %}">
+ 
+<!-- Default Theme -->
+<link rel="stylesheet" href="{% static "owl-carousel/owl.theme.css" %}">
+<link rel="stylesheet" href="{% static "owl-carousel/custom.css" %}">
+ 
+<!-- Include js plugin -->
+<!-- TODO: move this to bottom of the page -->
+<script src="{% static "owl-carousel/owl.carousel.js" %}"></script>
+<!-- //Owl Carousel Setup -->
+
+
 <!-- start-smoth-scrolling -->
 <script type="text/javascript" src="{% static "js/move-top.js" %}"></script>
 <script type="text/javascript" src="{% static "js/easing.js" %}"></script>
@@ -58,7 +73,11 @@ function hideURLbar(){ window.scrollTo(0,1); } </script>
         </script>
 <!--- //End-rate -->
 
+{% block head %}
+{% endblock head %}
+
 </head>
+
 <body>
 <a href="offer.html"><img src="{% static "images/download.png" %}" class="img-head" alt=""></a>
 <div class="header">
@@ -256,6 +275,10 @@ function hideURLbar(){ window.scrollTo(0,1); } </script>
 {% block content %}
     
 {% endblock content %}
+
+<!-- TODO: this is a temporary solution, this should be done in CSS -->
+<br />
+<br />
 
 <!--footer-->
 <div class="footer">
