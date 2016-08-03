@@ -174,15 +174,31 @@ class ProductsModelTestCase(TestCase):
         """
         # get_all_images() testing
         images = self.product1.get_all_images()
-        self.assertIsNotNone(images, 'Image list is None')
+        self.assertGreater(len(images), 0, 'Image list is empty')
         self.assertEqual(len(images), 2)
         self.assertIn(self.another_product_image, images)
-        self.assertIsNone(self.product2.get_all_images())
-        
+        self.assertIn(self.prod_img, images)
+        self.assertEqual(len(self.product2.get_all_images()), 0)
+                
         # get_images() testing
         images = self.product1.get_images()
-        self.assertIsNotNone(images, 'Image list is None')
+        self.assertGreater(len(images), 0, 'Image list is empty')
         self.assertEqual(len(images), 1)
         self.assertEqual(images[0], self.another_product_image)
-        self.assertIsNone(self.product2.get_images())
+        self.assertEqual(len(self.product2.get_images()), 0)
 
+
+        # get_all_images_urls() testing
+        images_urls = self.product1.get_all_images_urls()
+        self.assertGreater(len(images_urls), 0, 'Image list is empty')
+        self.assertEqual(len(images_urls), 2)
+        self.assertIn(self.another_product_image.image.url, images_urls)
+        self.assertIn(self.prod_img.image.url, images_urls)
+        self.assertEqual(len(self.product2.get_all_images()), 0)
+
+        # get_images_urls() testing
+        images_urls = self.product1.get_images_urls()
+        self.assertGreater(len(images_urls), 0, 'Image list is empty')
+        self.assertEqual(len(images_urls), 1)
+        self.assertEqual(images_urls[0], self.another_product_image.image.url)
+        self.assertEqual(len(self.product2.get_images_urls()), 0)

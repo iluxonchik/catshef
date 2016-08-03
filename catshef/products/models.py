@@ -37,6 +37,43 @@ class Product(models.Model):
     def get_absolute_url(self):
         return reverse('products:product_detail', kwargs={'slug': self.slug})
 
+    def get_all_images(self):
+        """
+        Get all images, including the 'main_image', if present.
+
+        Returns an empty list if no images are found.
+        """
+        if not self.images:
+            return []
+
+        images = self.images.all()
+        return images
+
+    def get_images(self):
+        """
+        Get all images, except the 'main_image', if present.
+
+        Return an empty list if no images are found.
+        """
+        images = self.get_all_images()
+        return images.exclude(pk=self.main_image.pk) if self.main_image else images
+
+    def get_all_images_urls(self):
+        """
+        Get all images urls, including the 'main_image', if present.
+
+        Returns an empty list if no images are found.
+        """
+        return [image.image.url for image in self.get_all_images()]
+
+    def get_images_urls(self):
+        """
+        Get all images urçs, except the 'main_image', if present.
+
+        Return an empty list if no images are found.
+        """
+        return [image.image.url for image in self.get_images()]
+
     def __str__(self):
         return self.name
 
