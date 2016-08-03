@@ -1,7 +1,9 @@
 {% extends "products/base.html" %}
 {% load staticfiles %}
 {% block head %}
-    
+    {% block title %}
+        {{ site_name }}| {{ product }}
+    {% endblock title %}
 <!-- Owl Carousel Setup -->
 <!-- Important Owl stylesheet -->
 <link rel="stylesheet" href="{% static "owl-carousel/owl.carousel.css" %}">
@@ -96,72 +98,37 @@
 </script>
 
 
-
-
-
-
-
-
-            <div class="single">
-            <div class="container">
-                        <div class="single-top-main">
+<div class="single">
+    <div class="container">
+        <div class="single-top-main">
             <div class="col-md-5 single-top">
-            <div class="single-w3agile">
-                            
+                <div class="single-w3agile">
+                
 <div id="picture-frame">
+    <div id="sync1" class="owl-carousel">
+        {% with product_images_urls=product.get_images_urls main_image_url=product.main_image_url %}
+            {% if not main_image_url %}
+                main_image_url = {% static "images/no_image.jpg" %}
+            {% endif %}
+            
+            <div class="item"><img src="{{ main_image_url }}"></div>
 
-<div id="sync1" class="owl-carousel">
-  <div class="item"><img src="{{ product.main_image_url }}"></div>
-  <div class="item"><h1>2</h1></div>
-  <div class="item"><h1>3</h1></div>
-  <div class="item"><h1>4</h1></div>
-  <div class="item"><h1>5</h1></div>
-  <div class="item"><h1>6</h1></div>
-  <div class="item"><h1>7</h1></div>
-  <div class="item"><h1>8</h1></div>
-  <div class="item"><h1>9</h1></div>
-  <div class="item"><h1>10</h1></div>
-  <div class="item"><h1>11</h1></div>
-  <div class="item"><h1>12</h1></div>
-  <div class="item"><h1>13</h1></div>
-  <div class="item"><h1>14</h1></div>
-  <div class="item"><h1>15</h1></div>
-  <div class="item"><h1>16</h1></div>
-  <div class="item"><h1>17</h1></div>
-  <div class="item"><h1>18</h1></div>
-  <div class="item"><h1>19</h1></div>
-  <div class="item"><h1>20</h1></div>
-  <div class="item"><h1>21</h1></div>
-  <div class="item"><h1>22</h1></div>
-  <div class="item"><h1>23</h1></div>
-</div>
-<div id="sync2" class="owl-carousel">
-  <div class="item"><img src="{{ product.main_image_url }}"></div>
-  <div class="item"><h1>2</h1></div>
-  <div class="item"><h1>3</h1></div>
-  <div class="item"><h1>4</h1></div>
-  <div class="item"><h1>5</h1></div>
-  <div class="item"><h1>6</h1></div>
-  <div class="item"><h1>7</h1></div>
-  <div class="item"><h1>8</h1></div>
-  <div class="item"><h1>9</h1></div>
-  <div class="item"><h1>10</h1></div>
-  <div class="item"><h1>11</h1></div>
-  <div class="item"><h1>12</h1></div>
-  <div class="item"><h1>13</h1></div>
-  <div class="item"><h1>14</h1></div>
-  <div class="item"><h1>15</h1></div>
-  <div class="item"><h1>16</h1></div>
-  <div class="item"><h1>17</h1></div>
-  <div class="item"><h1>18</h1></div>
-  <div class="item"><h1>19</h1></div>
-  <div class="item"><h1>20</h1></div>
-  <div class="item"><h1>21</h1></div>
-  <div class="item"><h1>22</h1></div>
-  <div class="item"><h1>23</h1></div>
-</div>
+            {% for image_url in product_images_urls %}
+                <div class="item" image-count="{{ forloop.counter }}"><img src="{{ image_url }}"></div>
+            {% endfor %}
+    </div>
+    <div id="sync2" class="owl-carousel">
+            {% if not main_image_url %}
+                main_image_url = {% static "images/no_image.jpg" %}
+            {% endif %}
+            
+            <div class="item"><img src="{{ main_image_url }}"></div>
 
-
+            {% for image_url in product_images_urls  %}
+                <div class="item" image-count="{{ forloop.counter }}"><img src="{{ image_url }}"></div>
+            {% endfor %}
+        {% endwith %}
+    </div>
 </div>
         
         

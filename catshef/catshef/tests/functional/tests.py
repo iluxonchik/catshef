@@ -3,7 +3,7 @@ Functional tests. "#" is used for user story comments and "##" is used for
 notes to developers and are not actually part of the user story.
 """
 import pdb
-from django.test import LiveServerTestCase
+from django.test import LiveServerTestCase, override_settings
 from selenium import webdriver
 from selenium.common import exceptions
 
@@ -32,6 +32,7 @@ class FoodItemsTestCase(LiveServerTestCase):
     def tearDown(self):
         self.browser.quit()
 
+    @override_settings(DEBUG = True)
     def test_homepage_has_items_list_accross_pages(self):
         """
         Test that there are items in the home page and that they are split
@@ -157,12 +158,25 @@ class FoodItemsTestCase(LiveServerTestCase):
             self.live_server_url + reverse('products:product_detail',
                 kwargs={'slug': 'chicken-breast'}))
 
-        self.fail('Finish the test')
-        
-        # She notices that there are a couple of images of the product and that
-        # she can switch between them.
 
-        # There is also a description of the product.
+        # She notices that there are a couple of images of the product (4, 
+        # to be exact) and that she can switch between them.
+        images_top = self.browser.find_elements_by_xpath(
+            '//div[@id="sync1"]//div[@class="item"]/img')
+
+        images_bottom = self.browser.find_elements_by_xpath(
+            '//div[@id="sync2"]//div[@class="item"]/img')
+
+        self.assertEqual(len(images_top), len(images_bottom), 'Image count in '
+            'sync divs mismatch')
+        self.assertEqual(len(images_top), 4, 'Top image count mismatch')
+
+        # She notices that the title of the page is now 
+        # '<SITE_NAME>| Chicken Breast'. There is also a description of the 
+        # product, which says 'Chicken breast. Yes, chicken breast.'.
+        self.assertEqual(self.browser.title, SITE_NAME + '| Chicken Breast')
+        description = self.browser.find_element_by_xpath('//p[@class="in-pa"]')
+        self.assertEqual(description.text, 'Chicken breast. Yes, chicken breast.')
 
         # There is also information about the nutritional contents. She can
         # see how many protein, carbohydrates, fats and calories the product has.
@@ -173,6 +187,7 @@ class FoodItemsTestCase(LiveServerTestCase):
         # She also notices that "Chicken Breast" belongs to the "meat" and
         # "high protein" categories. She can click on any of them.
 
+        self.fail('Finish the test')
         ## TODO: decide if we're gonna have both: "Related Products" and 
         ## "Often Bought Together" secitions or just one of them.
 
@@ -211,7 +226,10 @@ class FoodItemsTestCase(LiveServerTestCase):
 
 
     def __setup_database(self):
-        image_path = 'products/tests/resources/img/chicken_breast.jpg'
+        image1_path = 'products/tests/resources/img/chicken_breast.jpg'
+        image2_path = 'products/tests/resources/img/chicken_breast2.jpg'
+        image3_path = 'products/tests/resources/img/chicken_breast3.jpg'
+        image4_path = 'products/tests/resources/img/chicken_breast4.jpg'
 
         self.cat1 = Category.objects.create(
             name='meat', 
@@ -239,16 +257,37 @@ class FoodItemsTestCase(LiveServerTestCase):
 
         self.product2.categories.add(self.cat1)
 
-        self.prod_img = ProductImage.objects.create(image=SimpleUploadedFile(
+        self.prod_img_1 = ProductImage.objects.create(image=SimpleUploadedFile(
                 name='product1_img.jpg',
-                content=open(image_path, 'rb').read(),
+                content=open(image1_path, 'rb').read(),
                 content_type='image/jpeg'),
                 product=self.product1)
 
-        self.product1.main_image = self.prod_img
+
+        self.prod_img_2 = ProductImage.objects.create(image=SimpleUploadedFile(
+                name='product1_img2.jpg',
+                content=open(image2_path, 'rb').read(),
+                content_type='image/jpeg'),
+                product=self.product1)
+
+
+        self.prod_img_3 = ProductImage.objects.create(image=SimpleUploadedFile(
+                name='product1_img3.jpg',
+                content=open(image3_path, 'rb').read(),
+                content_type='image/jpeg'),
+                product=self.product1)
+
+
+        self.prod_img_4 = ProductImage.objects.create(image=SimpleUploadedFile(
+                name='product1_img4.jpg',
+                content=open(image4_path, 'rb').read(),
+                content_type='image/jpeg'),
+                product=self.product1)
+
+        self.product1.main_image = self.prod_img_1
         self.product1.save()
 
-        self.product2.main_image = self.prod_img
+        self.product2.main_image = self.prod_img_1
         self.product2.save()
 
 
