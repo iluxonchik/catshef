@@ -1,5 +1,11 @@
+import decimal
+
 from django.db import models
+import django.core.exceptions as exceptions
+
 from django.core.urlresolvers import reverse
+
+from products.utils.nutrition import CAL2000
 
 
 class Category(models.Model):
@@ -165,6 +171,37 @@ class Product(models.Model):
                 'fat': self.nutrition.fat,
                 'calories': self.nutrition.calories,
                 }
+
+    @property
+    def has_nutrition(self):
+        return self.nutrition is not None
+
+    @property
+    def protein_daily_percent(self, nutr_info=CAL2000, round=True):
+        if self.has_nutrition:
+            res = self.protein*100/nutr_info.protein
+            return self.__round(res, round)
+        return 0
+    
+    @property
+    def carbs_daily_percent(self, nutr_info=CAL2000, round=True):
+        if self.has_nutrition:
+            res = self.carbs*100/nutr_info.carbs
+            return self.__round(res, round)
+        return 0
+    
+    @property
+    def fat_daily_percent(self, nutr_info=CAL2000, round=True):
+        if self.has_nutrition:
+            res = self.fat*100/nutr_info.fat
+            return self.__round(res, round)
+        return 0
+
+    def __round(self, value, round=True):
+        return float('{0:.1f}'.format(value)) if round else value
+
+        
+    
 
 class ProductImage(models.Model):
     # image will be uploaded to MEDIA_ROOT/products/%Y/%m/%d/

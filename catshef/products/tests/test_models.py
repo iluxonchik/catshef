@@ -3,6 +3,7 @@ import pdb
 from django.test import TestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
+import django.core.exceptions as exceptions
 
 from products.models import Product, Category, ProductImage, ProductNutrition
 
@@ -44,11 +45,22 @@ class ProductsModelTestCase(TestCase):
             stock=123,
             price=321)
 
+        self.product4 = Product.objects.create(
+            name='Another Chicken Breast',
+            slug='another-chicken-breast',
+            description='Just another chicken breast',
+            stock=999,
+            price=23)
+
         self.product_nutrition1 = ProductNutrition.objects.create(protein=100, 
             carbs=1, fat=1, calories=413)
 
+
         self.product_nutrition2 = ProductNutrition.objects.create(protein=100,
             carbs=1, fat=1)
+
+        self.product_nutrition4 = ProductNutrition.objects.create(protein=31, 
+            carbs=0, fat=3.6, calories=165)
 
         self.product1.nutrition = self.product_nutrition1
 
@@ -73,6 +85,9 @@ class ProductsModelTestCase(TestCase):
 
         self.product2.main_image = self.prod_img
         self.product2.save()
+
+        self.product4.nutrition = self.product_nutrition4
+        self.product3.save()
 
         # TODO: test OrderField (when needed in FT)
 
@@ -143,6 +158,22 @@ class ProductsModelTestCase(TestCase):
         # added to the model if it's ommited during the object creation
         self.assertEquals(self.product_nutrition2.calories, 413)
 
+        with self.assertRaises(exceptions.ValidationError):
+             ProductNutrition.objects.create(protein=-1, carbs=0,
+                fat=0, calories=0)
+
+        with self.assertRaises(exceptions.ValidationError):
+             ProductNutrition.objects.create(protein=100, carbs=-1,
+                fat=0, calories=0)
+        with self.assertRaises(exceptions.ValidationError):
+             ProductNutrition.objects.create(protein=200, carbs=1,
+                fat=-1, calories=0)
+             
+        with self.assertRaises(exceptions.ValidationError):
+             ProductNutrition.objects.create(protein=300, carbs=0,
+                fat=0, calories=-42)
+
+
 
     def test_product_price_and_offer(self):
         self.assertEqual(self.product1.current_price, 5, 'Offer price was '
@@ -202,3 +233,24 @@ class ProductsModelTestCase(TestCase):
         self.assertEqual(len(images_urls), 1)
         self.assertEqual(images_urls[0], self.another_product_image.image.url)
         self.assertEqual(len(self.product2.get_images_urls()), 0)
+
+    def test_nutrition_facts(self):
+        self.assertTrue(self.product4.has_nutrition)
+        self.assertEqual(self.product4.protein_daily_percent, 62)
+        self.assertEqual(self.product4.carbs_daily_percent, 0)
+        self.assertEqual(self.product4.fat_daily_percent, 5.5)
+
+        # Product with no nutrition
+        self.assertFalse(self.product3.has_nutrition)
+        self.assertEqual(self.product3.protein_daily_percent, 0)
+        self.assertEqual(self.product3.carbs_daily_percent, 0)
+        self.assertEqual(self.product3.fat_daily_percent, 0)
+
+        # Product with some tricky values
+        product_nutrition = ProductNutrition.objects.create(
+            protein=3.14159265359, carbs=0, fat=0)
+        self.product4.nutrition = product_nutrition
+        self.product4.save()
+        self.assertEqual(self.product4.protein_daily_percent, 6.3)
+
+
