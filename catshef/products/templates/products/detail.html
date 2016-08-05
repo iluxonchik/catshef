@@ -1,9 +1,7 @@
 {% extends "products/base.html" %}
 {% load staticfiles %}
+{% block title %}{{ site_name }}| {{ product }}{% endblock title %}
 {% block head %}
-    {% block title %}
-        {{ site_name }}| {{ product }}
-    {% endblock title %}
 <!-- Owl Carousel Setup -->
 <!-- Important Owl stylesheet -->
 <link rel="stylesheet" href="{% static "owl-carousel/owl.carousel.css" %}">
@@ -151,6 +149,7 @@
                     <div class="starbox small ghosting"> </div>
                 </div>
                 <p class="in-pa"> {{ product.description }} </p>
+
                 
                 <ul class="social-top">
                     <li><a href="#" class="icon facebook"><i class="fa fa-facebook" aria-hidden="true"></i><span></span></a></li>
