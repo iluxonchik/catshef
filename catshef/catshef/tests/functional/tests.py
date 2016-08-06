@@ -118,7 +118,7 @@ class FoodItemsTestCase(LiveServerTestCase):
         self.assertEquals(body_class, 'modal-open')
         self.assertEqual(url_before_click, self.browser.current_url)
 
-        active_modal = self.browser.find_element_by_xpath('//div[@aria-hidden="false"]')
+        active_modal = self.browser.find_element_by_xpath('//div[@class="modal fade in"]')
         self.assertIsNotNone(active_modal, 'Active modal not found')
 
         # She notices that the product has 31g of protein, "0g" of
@@ -180,9 +180,26 @@ class FoodItemsTestCase(LiveServerTestCase):
 
         # There is also information about the nutritional contents. She can
         # see how many protein, carbohydrates, fats and calories the product has.
-
+        # To access it, she clicks on the "Nutrition" tab.
+        nutr_tab = self.browser.find_element_by_xpath(
+            '//a[@href="#product_tabs_nutrition"]')
+        self.assertIsNotNone(nutr_tab, '"Nutrition" tab not found')
+        nutr_tab.click()
+        # import pdb; pdb.set_trace()
         # She notices that the product has "31 g" of protein, "0g" of
-        # carbohydrates, "3.6 g" of carbs and 165 calories.
+        # carbohydrates, "3.6 g" of fat and 165 calories.
+        nutr_div = self.browser.find_element_by_id('product_tabs_nutrition')
+        self.assertInHTML('<th colspan="2"><b>Protein</b> 31g</th>',
+            nutr_div.get_attribute('innerHTML'))
+        
+        self.assertInHTML('<th colspan="2"><b>Carbohydrate</b> 0g</th>',
+            nutr_div.get_attribute('innerHTML'))
+        
+        self.assertInHTML('<th colspan="2"><b>Fat</b> 3.6g</th>',
+            nutr_div.get_attribute('innerHTML'))
+        
+        self.assertInHTML('<th colspan="2"><b>Calories</b> 165</th>',
+            nutr_div.get_attribute('innerHTML'))
 
         # She also notices that "Chicken Breast" belongs to the "meat" and
         # "high protein" categories. She can click on any of them.

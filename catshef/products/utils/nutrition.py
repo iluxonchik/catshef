@@ -31,3 +31,7 @@ class RecommendedNutritionalIntake():
         
 CAL2000 = RecommendedNutritionalIntake(protein=50, carbs=300,
     fat=65, calories=2000)
+
+# Note for protein: it's 62.5g rounded to 65g
+CAL2500 = RecommendedNutritionalIntake(protein=65, carbs=375,
+    fat=80, calories=2500)
