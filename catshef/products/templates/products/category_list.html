@@ -1,0 +1,62 @@
+{% extends "products/base.html" %}
+
+{% block title %}{{ site_name }}-{{ category }}{% endblock title %}
+
+{% block content %}
+<div class="content-top ">
+    <div class="container ">
+    <div id="products-list" class="con-w3l">
+        {% include "products/list_ajax.html" %}
+    </div>
+    </div>
+    </div>
+{% endblock content %}
+
+{% block domready %}
+    var page = 1;
+    var empty_page = false;
+    var block_request = false;
+
+    function load_products(force_load=false) {   
+        var margin = $(document).height() - $(window).height() - 200;
+        if ($(window).scrollTop() > margin && !empty_page && !block_request || force_load) {
+            block_request = true; // prevent other AJAX calls from happening, while this one is active
+            $.get('?page=' + page, function(data) {
+                if (data == '') {
+                    empty_page = true;
+                } else {
+                    block_request = false;
+                    $('#products-list').append(data);
+                }
+            });
+            page += 1;
+            return true; // images have been loaded
+        }
+        return false;
+    }
+
+    load_products(true); // force load product list on page load
+
+    /*
+        Product loading "hack": If the resolution is hight enough, there will be no scroll bar, therefore no scroll event, so at most X products will be loaded.
+        The timer forces the check every second to get arround that problem.
+    */
+
+    function handle_timeout() {
+        var images_loaded = load_products();
+        if (images_loaded) {
+            window.setTimeout(handle_timeout, 1000);
+        }
+        /* 
+            if no images have been loaded (images_loaded == false), this means that either:
+                1. current window position is not low enough, so that means that the scroll event will fire next time, so
+                   we don't need the timeout anymore
+                2. no more products are available, so no need to make unneceassary requests
+        */
+    }
+    
+    window.setTimeout(handle_timeout, 1000);
+
+    $(window).scroll(load_products);
+
+{% endblock domready %}
