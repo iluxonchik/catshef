@@ -15,6 +15,9 @@ class Category(models.Model):
     parent = models.ForeignKey('Category', null=True, 
         related_name='child_categories', on_delete=models.SET_NULL)
 
+    def get_absolute_url(self):
+        pass
+
     def __str__(self):
         return self.name
 

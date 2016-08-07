@@ -201,10 +201,16 @@ class FoodItemsTestCase(LiveServerTestCase):
         self.assertInHTML('<th colspan="2"><b>Calories</b> 165</th>',
             nutr_div.get_attribute('innerHTML'))
 
+        import pdb; pdb.set_trace()
+
         # She also notices that "Chicken Breast" belongs to the "meat" and
         # "high protein" categories. She can click on any of them.
+        meat_cat = self.browser.find_element_by_xpath(
+        
+            '//a/span[@class="label label-success" and text()="meat"]')
+        hp_cat = self.browser.find_element_by_xpath(
+                    '//span[@class="label label-success" and text()="high protein"]')
 
-        self.fail('Finish the test')
         ## TODO: decide if we're gonna have both: "Related Products" and 
         ## "Often Bought Together" secitions or just one of them.
 
@@ -220,6 +226,8 @@ class FoodItemsTestCase(LiveServerTestCase):
 
         # After clicking on the "high protein" category, she is taken to another
         # page, which shows various products within that category.
+        meat_cat.click()
+        self.fail('Finish the test')
 
         # She notices that that page has "Turkey Breast", "Tuna" and
         # "Scrambled Eggs".
@@ -254,6 +262,12 @@ class FoodItemsTestCase(LiveServerTestCase):
             description='The meat category.', 
             parent=None)
 
+        self.cat2 = Category.objects.create(
+            name='high protein', 
+            slug='high-protein',
+            description='The high protein category.', 
+            parent=None)
+
         self.product1 = Product.objects.create(
             name='Chicken Breast',
             slug='chicken-breast',
@@ -271,8 +285,10 @@ class FoodItemsTestCase(LiveServerTestCase):
             price=20)
 
         self.product1.categories.add(self.cat1)
+        self.product1.categories.add(self.cat2)
 
         self.product2.categories.add(self.cat1)
+        self.product2.categories.add(self.cat2)
 
         self.prod_img_1 = ProductImage.objects.create(image=SimpleUploadedFile(
                 name='product1_img.jpg',
