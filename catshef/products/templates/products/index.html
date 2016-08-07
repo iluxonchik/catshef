@@ -34,7 +34,7 @@
                                     <a href="#" data-toggle="modal" data-target="#myModal{{ forloop.counter }}" class="offer-img">
                                         <img src="{{ product.main_image_url }}" class="img-responsive" alt="{{ product }}">
                                         {% if product.has_offer %}
-                                            <div class="offer"><p><span>-{{ product.discount_percentage }}%</span></p></div>
+                                            <div class="offer"><p><span>-{{ product.discount_percentage|floatformat:"-1" }}%</span></p></div>
                                         {% endif %}
                                     </a>
                                     <div class="mid-1">

@@ -20,7 +20,10 @@ function hideURLbar(){ window.scrollTo(0,1); } </script>
 <link href="{% static "css/style.css" %}" rel='stylesheet' type='text/css' />
 
 <!-- js -->
-    <script   src="https://code.jquery.com/jquery-1.12.4.min.js"   integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ="   crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></script>
+    <!-- NOTE: no longer mantained! Go to GH for more info. The reason I'm using this and not JS Cookie, is because this one supports Android 4.3, while the other one
+    seems to have tests only from 5.1  -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.cookie/1.4.1/jquery.cookie.min.js"></script>
 <!-- //js -->
 
 <!-- Owl Carousel Setup -->
@@ -37,6 +40,24 @@ function hideURLbar(){ window.scrollTo(0,1); } </script>
 <!-- //Owl Carousel Setup -->
 
 
+
+<!-- AJAX Setup -->
+<script type="text/javascript">
+    var csrftoken = $.cookie('csrftoken');
+    function csrfSafeMethod(method) {
+        // these methods do not require CSRF protection
+        return(/^(GET|HEAD|OPTIONS|TRACE)$/.test(method))
+    }
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader('X-CSRFToken', csrftoken);
+            }
+        }
+    })
+</script>
+<!-- //AJAX Setup -->
+
 <!-- start-smoth-scrolling -->
 <script type="text/javascript" src="{% static "js/move-top.js" %}"></script>
 <script type="text/javascript" src="{% static "js/easing.js" %}"></script>
@@ -47,6 +68,11 @@ function hideURLbar(){ window.scrollTo(0,1); } </script>
             $('html,body').animate({scrollTop:$(this.hash).offset().top},1000);
         });
     });
+
+$(document).ready(function() {
+    {% block domready %}  
+    {% endblock domready %}
+});
 </script>
 <!-- start-smoth-scrolling -->
 <link href="{% static "css/font-awesome.css" %}" rel="stylesheet"> 
