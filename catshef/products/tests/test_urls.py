@@ -23,5 +23,11 @@ class ProductsURLsTestCase(TestCase):
         self.assertEqual(product_detail.func.__name__, 'product_detail')
         self.assertEqual(product_detail.kwargs['slug'], 'chicken-breast')
 
-
-
+    def test_category_url(self):
+        """
+        Test that the URL for category resolvese to the correct view function.
+        """
+        category = resolve('/category/meat/')
+        self.assertEqual(category.view_name, 'products:category')
+        self.assertEqual(category.func.__name__, 'category')
+        self.assertEqual(category.kwargs['slug'], 'meat')

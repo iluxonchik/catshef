@@ -201,10 +201,26 @@ class FoodItemsTestCase(LiveServerTestCase):
         self.assertInHTML('<th colspan="2"><b>Calories</b> 165</th>',
             nutr_div.get_attribute('innerHTML'))
 
+
         # She also notices that "Chicken Breast" belongs to the "meat" and
         # "high protein" categories. She can click on any of them.
+        meat_cat = self.browser.find_element_by_xpath('//a/span[@class="label label-success" and text()="meat"]')
+        hp_cat = self.browser.find_element_by_xpath(
+                    '//span[@class="label label-success" and text()="high protein"]')
 
-        self.fail('Finish the test')
+        # She notices that the urls is in the form of '/category/meat/' and
+        # '/category/high-protein/' for the meat and high protein categories,
+        # respectively
+        
+        ## A bit hacky and might be a bit confusing
+        meat_link = meat_cat.find_element_by_xpath('../..')
+        self.assertIn(reverse('products:category', 
+                kwargs={'slug':'meat'}), meat_link.get_attribute('innerHTML'))
+        hp_link = hp_cat.find_element_by_xpath('../..')
+        self.assertIn(reverse('products:category', 
+                kwargs={'slug':'high-protein'}),
+                hp_link.get_attribute('innerHTML'))
+
         ## TODO: decide if we're gonna have both: "Related Products" and 
         ## "Often Bought Together" secitions or just one of them.
 
@@ -220,26 +236,26 @@ class FoodItemsTestCase(LiveServerTestCase):
 
         # After clicking on the "high protein" category, she is taken to another
         # page, which shows various products within that category.
+        # She notices that the URL is '/category/high_protein/'
+        hp_cat.click()
+        self.assertEqual(self.browser.current_url, self.live_server_url + 
+            reverse('products:category', kwargs={'slug':self.cat2.slug}))
 
         # She notices that that page has "Turkey Breast", "Tuna" and
-        # "Scrambled Eggs".
+        # "Chicken Breast".
+
+        browser_html = self.browser.find_element_by_tag_name('html').get_attribute('innerHTML')
+
+        self.assertInHTML('<a href="/product/turkey-breast/">Turkey Breast</a>', browser_html)
+        self.assertInHTML('<a href="/product/tuna/">Tuna</a>', browser_html)
+        self.assertInHTML('<a href="/product/chicken-breast/">Chicken Breast</a>', browser_html)
+
+        self.fail('Finish the test')
 
         # Exited about all of that, she decides to back to the main page
         # and see what other options there are. She scrolls to the end of the
-        # page and notices that there is a paginator at the bottom. Currently,
-        # the page "1" is selected.
-
-        # She wants to go to page "2", for that she notices that she has two
-        # options: she can either click on "2" directly in the paginator, or
-        # press the ">" symbol on the right side of the paginator.
-
-        # Since she's on the first page, she also noties that the "<" symbol is
-        # not clickable.
-
-        # She proceeds to click on "2" and she's taken to a new page, she
-        # notices that the url now changed to <url>.
-
-        # On the new page she sees a list of more products.
+        # page and notices that more products are loaded. All of that happens
+        # without page being refreshed.
 
 
     def __setup_database(self):
@@ -247,11 +263,18 @@ class FoodItemsTestCase(LiveServerTestCase):
         image2_path = 'products/tests/resources/img/chicken_breast2.jpg'
         image3_path = 'products/tests/resources/img/chicken_breast3.jpg'
         image4_path = 'products/tests/resources/img/chicken_breast4.jpg'
+        image4_path = 'products/tests/resources/img/tuna.jpg'
 
         self.cat1 = Category.objects.create(
             name='meat', 
             slug='meat',
             description='The meat category.', 
+            parent=None)
+
+        self.cat2 = Category.objects.create(
+            name='high protein', 
+            slug='high-protein',
+            description='The high protein category.', 
             parent=None)
 
         self.product1 = Product.objects.create(
@@ -270,9 +293,22 @@ class FoodItemsTestCase(LiveServerTestCase):
             stock=42,
             price=20)
 
+        self.product3 = Product.objects.create(
+            name='Tuna',
+            slug='tuna',
+            description='Tuna comming straight outta ocean.',
+            stock=120,
+            price=12.21,
+            offer_price=11.2,
+            available=True)
+
         self.product1.categories.add(self.cat1)
+        self.product1.categories.add(self.cat2)
 
         self.product2.categories.add(self.cat1)
+        self.product2.categories.add(self.cat2)
+
+        self.product3.categories.add(self.cat2)
 
         self.prod_img_1 = ProductImage.objects.create(image=SimpleUploadedFile(
                 name='product1_img.jpg',
@@ -301,11 +337,21 @@ class FoodItemsTestCase(LiveServerTestCase):
                 content_type='image/jpeg'),
                 product=self.product1)
 
+        self.prod_img_5 = ProductImage.objects.create(image=SimpleUploadedFile(
+                name='product3_img1.jpg',
+                content=open(image4_path, 'rb').read(),
+                content_type='image/jpeg'),
+                product=self.product3)
+
         self.product1.main_image = self.prod_img_1
         self.product1.save()
 
+
         self.product2.main_image = self.prod_img_1
         self.product2.save()
+
+        self.product3.main_image = self.prod_img_5
+        self.product3.save()
 
 
         self.product1_nutrition = ProductNutrition.objects.create(protein=31, 

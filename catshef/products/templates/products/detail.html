@@ -150,6 +150,17 @@ if(found===false){
                           {% endif %}
                           &euro;{{ product.current_price }}</p>
                       </div>
+                      {% with categories=product.categories.all %}
+                          {% if categories %}
+                              <div class="prod-detail-categories">
+
+                              {% for category in categories %}
+                                   <a href="{{ category.get_absolute_url }}" class="category-link"><span class="label label-success">{{ category }}</span></a>    
+                              {% endfor %}
+
+                              </div>  
+                          {% endif %}
+                      {% endwith %}
                       <div class="block block-w3">
                         <div class="starbox small ghosting"> </div>
                     </div>
@@ -197,15 +208,6 @@ if(found===false){
         </div>
     </div>
 </div>
-
-
-
-
-
-
-
-
-
 
 </div>
 </div>

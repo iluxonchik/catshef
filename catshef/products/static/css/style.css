@@ -3163,3 +3163,17 @@ h1.t-button {
     font-size: 13px;
 }
 }
+
+/*--
+Custom additons below
+--*/
+
+/* product categories in prouduct detail page */
+.prod-detail-categories {
+  padding-bottom: 2%;
+  cursor: ;
+}
+
+a.category-link {
+  text-decoration: none; /* don't underline links */
+}

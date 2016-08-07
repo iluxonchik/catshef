@@ -1,7 +1,9 @@
 from django.test import TestCase, RequestFactory
-from products.views import index, product_detail
+from products.views import index, product_detail, category
 from django.core.urlresolvers import reverse
 from products.models import Product, Category
+
+from time import sleep
 
 class CatShefBaseTestCase(TestCase):
     """
@@ -86,3 +88,30 @@ class ProductDetailTestCase(CatShefBaseTestCase):
                 'context.')
         self.assertEqual(context['product'], Product.objects.get(
                 slug='chicken-breast'))
+
+class CategoryListTestCase(CatShefBaseTestCase):
+
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_basic(self):
+        """
+        Teset that the category list view returns a 200 response, uses
+        the correct template and has the correct context.
+        """
+        request = self.factory.get('/category/meat/')
+
+        with self.assertTemplateUsed('products/category_list.html'):
+            response = category(request, slug='meat')
+            self.assertEqual(response.status_code, 200)
+            # NOTE: can't test assertInHTML, sinct the template loads data via javascript
+
+    def test_category_context(self):
+        """
+        Test that the expected product is passed in the context.
+        """
+
+        response = self.client.get('/category/meat/')
+        context = response.context
+        self.assertIsNotNone(context['category'])
+        self.assertEqual(self.cat1, context['category'])

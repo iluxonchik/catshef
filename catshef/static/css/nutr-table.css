@@ -1,0 +1,110 @@
+@charset "UTF-8";
+#nutrition-table .image {
+  width: 250px;
+  float: left;
+  margin: 20px;
+}
+
+#nutrition-table p {
+  margin: 0;
+}
+
+#nutrition-table.performance-facts {
+  border: 1px solid black;
+  margin: 20px;
+  float: left;
+  width: 280px;
+  padding: 0.5rem;
+  font-size: small;
+  line-height: 1.4;
+  font-family:sans-serif;
+  -ms-text-size-adjust:100%;
+  -webkit-text-size-adjust:100%
+}
+#nutrition-table.performance-facts table {
+  border-collapse: collapse;
+}
+
+#nutrition-table .performance-facts__title {
+  font-weight: bold;
+  font-size: 2rem;
+  margin: 0 0 0.25rem 0;
+}
+
+#nutrition-table .performance-facts__header {
+  border-bottom: 10px solid black;
+  padding: 0 0 0.25rem 0;
+  margin: 0 0 0.5rem 0;
+}
+#nutrition-table .performance-facts__header p {
+  margin: 0;
+}
+
+#nutrition-table .performance-facts__table, #nutrition-table .performance-facts__table--small, #nutrition-table .performance-facts__table--grid {
+  width: 100%;
+}
+#nutrition-table .performance-facts__table thead tr th, #nutrition-table .performance-facts__table--small thead tr th, #nutrition-table .performance-facts__table--grid thead tr th, #nutrition-table .performance-facts__table thead tr td, .performance-facts__table--small thead tr td, .performance-facts__table--grid thead tr td {
+  border: 0;
+}
+#nutrition-table .performance-facts__table th, #nutrition-table .performance-facts__table--small th, #nutrition-table .performance-facts__table--grid th, #nutrition-table .performance-facts__table td, #nutrition-table .performance-facts__table--small td, #nutrition-table .performance-facts__table--grid td {
+  font-weight: normal;
+  text-align: left;
+  padding: 0.25rem 0;
+  border-top: 1px solid black;
+  white-space: nowrap;
+}
+#nutrition-table .performance-facts__table td:last-child, #nutrition-table .performance-facts__table--small td:last-child, #nutrition-table .performance-facts__table--grid td:last-child {
+  text-align: right;
+}
+#nutrition-table .performance-facts__table .blank-cell, #nutrition-table .performance-facts__table--small .blank-cell, #nutrition-table .performance-facts__table--grid .blank-cell {
+  width: 1rem;
+  border-top: 0;
+}
+#nutrition-table .performance-facts__table .thick-row th, #nutrition-table .performance-facts__table--small .thick-row th, #nutrition-table .performance-facts__table--grid .thick-row th, #nutrition-table .performance-facts__table .thick-row td, .performance-facts__table--small .thick-row td, .performance-facts__table--grid .thick-row td {
+  border-top-width: 5px;
+}
+
+#nutrition-table.performance-facts .small-info {
+  font-size: 11.2px;
+  line-height: 1.4;
+
+}
+
+#nutrition-table .performance-facts__table--small {
+  border-bottom: 1px solid #999;
+  margin: 0 0 0.5rem 0;
+}
+#nutrition-table .performance-facts__table--small thead tr {
+  border-bottom: 1px solid black;
+}
+#nutrition-table .performance-facts__table--small td:last-child {
+  text-align: left;
+}
+#nutrition-table .performance-facts__table--small th, #nutrition-table .performance-facts__table--small td {
+  border: 0;
+  padding: 0;
+}
+
+#nutrition-table .performance-facts__table--grid {
+  margin: 0 0 0.5rem 0;
+}
+#nutrition-table .performance-facts__table--grid td:last-child {
+  text-align: left;
+}
+#nutrition-table .performance-facts__table--grid td:last-child::before {
+  content: "•";
+  font-weight: bold;
+  margin: 0 0.25rem 0 0;
+}
+
+#nutrition-table .text-center {
+  text-align: center;
+}
+
+#nutrition-table .thick-end {
+  border-bottom: 10px solid black;
+}
+
+#nutrition-table .thin-end {
+  border-bottom: 1px solid black;
+}

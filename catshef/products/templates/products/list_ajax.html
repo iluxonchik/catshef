@@ -1,0 +1,79 @@
+{% block content %}
+
+    {% for product in products %}
+    <div class="col-md-3 m-wthree">
+        <div class="col-m">                             
+            <a href="#" data-toggle="modal" data-target="#myModal{{ page_num }}-{{ forloop.counter }}" class="offer-img">
+                <img src="{{ product.main_image_url }}" class="img-responsive" alt="{{ product }}">
+                {% if product.has_offer %}
+                <div class="offer"><p><span>-{{ product.discount_percentage|floatformat:"-1" }}%</span></p></div>
+                {% endif %}
+            </a>
+            <div class="mid-1">
+                <div class="women">
+                    <h6><a href="{{ product.get_absolute_url }}">{{ product }}</a></h6>       
+                </div>
+                <div class="mid-2">
+                    <p>
+                        {% if product.has_offer %}<label>&euro;{{ product.price }}</label>{% endif %}<em class="item_price">&euro;{{ product.current_price }}</em>
+                    </p>
+                    <div class="block">
+                        <div class="starbox small ghosting"><div class="positioner"><div class="stars"><div class="ghost" style="width: 42.5px; display: none;"></div><div class="colorbar" style="width: 42.5px;"></div><div class="star_holder"><div class="star star-0"></div><div class="star star-1"></div><div class="star star-2"></div><div class="star star-3"></div><div class="star star-4"></div></div></div></div></div>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="add">
+                 <button class="btn btn-danger my-cart-btn my-cart-b " data-id="1" data-name="{{ product }}" data-summary="summary 1" data-price="{{ product.current_price }}" data-quantity="1" data-image="images/of.png">Add to Cart</button>
+             </div>
+
+         </div>
+     </div>
+ </div>
+ {% endfor %}
+
+ {% for product in products %}
+    {% comment %}
+        this could've been done in the for loop above, but this way, the generated HTML will be more organized.
+    {% endcomment %}
+    <div class="modal fade" id="myModal{{ page_num }}-{{ forloop.counter }}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content modal-info">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>                        
+            </div>
+            <div class="modal-body modal-spa">
+                    <div class="col-md-5 span-2">
+                                <div class="item">
+                                    <img src="{{ product.main_image_url }}" class="img-responsive" alt="">
+                                </div>
+                    </div>
+                    <div class="col-md-7 span-1 ">
+                        <h3>{{ product }}</h3>
+
+                        {% if product.nutrition %}
+                            <p class="in-para">Nutritional info per 100g: <br /> 
+                            <strong>Protein: </strong> {{ product.protein|floatformat:"-1" }}g 
+                            <strong>Carbs: </strong> {{ product.carbs|floatformat:"-1"}}g <strong>Fat: </strong> {{ product.fat|floatformat:"-1" }}g 
+                            <strong>Calories: </strong> {{ product.calories|floatformat:"-1" }} </p>
+                        {% endif %}
+                        
+                        <div class="price_single">
+                          <span class="reducedfrom">
+                            {% if product.has_offer %}<del>&euro;{{ product.price }}</del>{% endif %}&euro;{{ product.current_price }}
+                          </span>
+                         <div class="clearfix"></div>
+                        </div>
+                        <h4 class="quick">Quick Overview:</h4>
+                        <p class="quick_desc">{{ product.description }}</p>
+                         <div class="add-to">
+                               <button class="btn btn-danger my-cart-btn my-cart-btn1 " data-id="1" data-name="Moong" data-summary="summary 1" data-price="{{ product.current_price }}" data-quantity="1" data-image="images/of.png">Add to Cart</button>
+                            </div>
+                    </div>
+                    <div class="clearfix"> </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+ {% endfor %}
+{% endblock content %}
