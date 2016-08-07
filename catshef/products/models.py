@@ -16,7 +16,7 @@ class Category(models.Model):
         related_name='child_categories', on_delete=models.SET_NULL)
 
     def get_absolute_url(self):
-        pass
+        return reverse('products:category', kwargs={'slug':self.slug})
 
     def __str__(self):
         return self.name

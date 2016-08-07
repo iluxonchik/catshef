@@ -168,7 +168,7 @@ class ProductsModelTestCase(TestCase):
         with self.assertRaises(exceptions.ValidationError):
              ProductNutrition.objects.create(protein=200, carbs=1,
                 fat=-1, calories=0)
-             
+
         with self.assertRaises(exceptions.ValidationError):
              ProductNutrition.objects.create(protein=300, carbs=0,
                 fat=0, calories=-42)
@@ -254,3 +254,6 @@ class ProductsModelTestCase(TestCase):
         self.assertEqual(self.product4.protein_daily_percent, 6.3)
 
 
+    def test_categories(self):
+        self.assertEqual(self.cat1.get_absolute_url(), reverse('products:category',
+            kwargs={'slug':self.cat1.slug}))

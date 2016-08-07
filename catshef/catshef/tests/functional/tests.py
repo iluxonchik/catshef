@@ -201,15 +201,25 @@ class FoodItemsTestCase(LiveServerTestCase):
         self.assertInHTML('<th colspan="2"><b>Calories</b> 165</th>',
             nutr_div.get_attribute('innerHTML'))
 
-        import pdb; pdb.set_trace()
 
         # She also notices that "Chicken Breast" belongs to the "meat" and
         # "high protein" categories. She can click on any of them.
-        meat_cat = self.browser.find_element_by_xpath(
-        
-            '//a/span[@class="label label-success" and text()="meat"]')
+        meat_cat = self.browser.find_element_by_xpath('//a/span[@class="label label-success" and text()="meat"]')
         hp_cat = self.browser.find_element_by_xpath(
                     '//span[@class="label label-success" and text()="high protein"]')
+
+        # She notices that the urls is in the form of '/category/meat/' and
+        # '/category/high-protein/' for the meat and high protein categories,
+        # respectively
+        
+        ## A bit hacky and might be a bit confusing
+        meat_link = meat_cat.find_element_by_xpath('../..')
+        self.assertIn(reverse('products:category', 
+                kwargs={'slug':'meat'}), meat_link.get_attribute('innerHTML'))
+        hp_link = hp_cat.find_element_by_xpath('../..')
+        self.assertIn(reverse('products:category', 
+                kwargs={'slug':'high-protein'}),
+                hp_link.get_attribute('innerHTML'))
 
         ## TODO: decide if we're gonna have both: "Related Products" and 
         ## "Often Bought Together" secitions or just one of them.
@@ -226,7 +236,7 @@ class FoodItemsTestCase(LiveServerTestCase):
 
         # After clicking on the "high protein" category, she is taken to another
         # page, which shows various products within that category.
-        meat_cat.click()
+        meat_link.click()
         self.fail('Finish the test')
 
         # She notices that that page has "Turkey Breast", "Tuna" and
