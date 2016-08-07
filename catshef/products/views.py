@@ -1,5 +1,7 @@
 from django.shortcuts import render
 from products.models import Product, Category
+from django.http import HttpResponse
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 def index(request):
     products = Product.objects.all()
@@ -13,4 +15,18 @@ def product_detail(request, slug):
 
 def category(request, slug):
     category = Category.objects.get(slug=slug)
-    return render(request, 'products/category.html', {'category':category})
+    products = Product.objects.filter(categories=category)
+    paginator = Paginator(products, 4)
+    page_num = request.GET.get('page')
+    try:
+        products = paginator.page(page_num)
+    except PageNotAnInteger:
+        products = paginator.page(1)
+    except EmptyPage:
+        if request.is_ajax():
+            return HttpResponse('')
+        products = paginator.page(paginator.num_pages)
+    if request.is_ajax():
+        return render(request, 'products/list_ajax.html', {'products':products,
+            'page_num':page_num})
+    return render(request, 'products/category_list.html', {'category':category})
