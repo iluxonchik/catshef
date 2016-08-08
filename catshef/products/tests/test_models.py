@@ -5,7 +5,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
 import django.core.exceptions as exceptions
 
-from products.models import Product, Category, ProductImage, ProductNutrition
+from products.models import Product, Category, ProductImage, ProductNutrition, Ingridient
 
 class ProductsModelTestCase(TestCase):
 
@@ -21,7 +21,7 @@ class ProductsModelTestCase(TestCase):
                 content_type='image/jpeg')
 
 
-        tuna_img = SimpleUploadedFile(
+        self.tuna_img = SimpleUploadedFile(
                 name='tuna_img.jpg',
                 content=open(tuna_path, 'rb').read(),
                 content_type='image/jpeg')
@@ -37,6 +37,16 @@ class ProductsModelTestCase(TestCase):
                 name='cocumber_img.jpg',
                 content=open(cucumber_path, 'rb').read(),
                 content_type='image/jpeg')
+        
+        self.igr1 = Ingridient.objects.create(name='Tomato', slug='tomato',
+            image=tomato_img)
+        self.igr2 = Ingridient.objects.create(name='Tuna', slug='tuna',
+            image=self.tuna_img)
+        self.igr3 = Ingridient.objects.create(name='Salad', slug='salad',
+            image=salad_img)
+        self.igr4 = Ingridient.objects.create(name='Cocumber', slug='cocumber',
+            image=cucumber_img)
+        
 
     def __setUpCategories(self):
         self.cat1 = Category.objects.create(
@@ -123,6 +133,10 @@ class ProductsModelTestCase(TestCase):
         self.product2.main_image = self.prod_img
         self.product2.save()
 
+    def __link_product_ingridient(self): 
+        self.product1.ingridients.set([self.igr1, self.igr2,
+            self.igr3, self.igr4])
+
     
     
     def setUp(self):
@@ -133,6 +147,7 @@ class ProductsModelTestCase(TestCase):
         self.__link_product_nutrition()
         self.__link_product_category()
         self.__link_product_productimage()
+        self.__link_product_ingridient()
         # TODO: test OrderField (when/if needed in FT)
 
     def test_products_basic(self):
@@ -303,4 +318,18 @@ class ProductsModelTestCase(TestCase):
             kwargs={'slug':self.cat1.slug}))
 
     def test_ingridients(self):
-        pass
+        tomato = Ingridient.objects.get(slug='tomato')
+        self.assertEqual(self.igr1, tomato)
+
+        prod_igr = self.product1.ingridients.all()
+        self.assertIn(self.igr1, prod_igr)
+
+        # Test ingridients to Product addtions from the Ingridient object
+        igr5 = Ingridient.objects.create(name='Fake Chicken',
+            slug='fake-chicken', image=self.tuna_img)
+        igr5.products.add(self.product1)
+        igr5.save()
+
+        prod_igr = self.product1.ingridients.all()
+        self.assertIn(igr5, prod_igr, 'New ingridient not found in Product')
+        self.assertIn(self.product1, igr5.products.all())
