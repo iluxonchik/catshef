@@ -39,6 +39,7 @@ class Product(models.Model):
         related_name='main_image_of', null=True, on_delete=models.SET_NULL)
     nutrition = models.ForeignKey('ProductNutrition', 
         on_delete=models.SET_NULL, null=True, blank=True)
+    ingridients = models.ManyToManyField('Ingridient', related_name='products')
     available = models.BooleanField(default=True)
     created = models.DateField(auto_now_add=True)
     updated = models.DateField(auto_now=True)
@@ -226,3 +227,15 @@ class ProductNutrition(models.Model):
         if self.calories is None:
             self.calories = type(self).__PROT_CAL * self.protein + type(self).__CARB_CAL * self.carbs + type(self).__FAT_CAL * self.fat
         super(ProductNutrition, self).save(*args, **kwargs)
+
+class Ingridient(models.Model):
+    # NOTE: the imaage will be displayed with size 80x80, so use somethimg 
+    # that scales well
+    name = models.CharField(max_length=64)
+    slug = models.SlugField(unique=True)
+    image = models.ImageField(upload_to='ingridients/%Y/%m/%d/')
+
+    def __str__(self):
+        return self.name
+
+

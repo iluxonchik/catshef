@@ -10,7 +10,7 @@ from selenium.common import exceptions
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
 
-from products.models import Product, Category, ProductImage, ProductNutrition
+from products.models import Product, Category, ProductImage, ProductNutrition, Ingridient
 
 
 # Constants. Since the name of the store is yet to be decided, it'll be stored
@@ -185,7 +185,7 @@ class FoodItemsTestCase(LiveServerTestCase):
             '//a[@href="#product_tabs_nutrition"]')
         self.assertIsNotNone(nutr_tab, '"Nutrition" tab not found')
         nutr_tab.click()
-        # import pdb; pdb.set_trace()
+
         # She notices that the product has "31 g" of protein, "0g" of
         # carbohydrates, "3.6 g" of fat and 165 calories.
         nutr_div = self.browser.find_element_by_id('product_tabs_nutrition')
@@ -201,6 +201,21 @@ class FoodItemsTestCase(LiveServerTestCase):
         self.assertInHTML('<th colspan="2"><b>Calories</b> 165</th>',
             nutr_div.get_attribute('innerHTML'))
 
+        # When she clicks on the "Nutrition" tab she notices that there is 
+        # an ingridient list, in that list she can find 'Tomatoes','Cocumber',
+        # 'Chicken' and 'Salad'.
+        nutr_tab = self.browser.find_element_by_id('product_tabs_nutrition')
+        nutr_tab.click()
+
+        ## NOTE: if the test fails here, check if the class of the div was
+        ## modified. This tests if the 'Nutrition' tab is marked as 'active'
+        ## after the click
+        nutr_div = self.browser.find_element_by_xpath('//div[@class="tab-pane fade active in" and @id="product_tabs_nutrition"]')
+
+        self.assertIn('Tomato', nutr_div.text)
+        self.assertIn('Tuna', nutr_div.text)
+        self.assertIn('Salad', nutr_div.text)
+        self.assertIn('Cocumber', nutr_div.text)
 
         # She also notices that "Chicken Breast" belongs to the "meat" and
         # "high protein" categories. She can click on any of them.
@@ -257,6 +272,50 @@ class FoodItemsTestCase(LiveServerTestCase):
         # page and notices that more products are loaded. All of that happens
         # without page being refreshed.
 
+
+    def __setUpIngridients(self):
+        tomato_path = 'products/tests/resources/img/tomato.jpg'
+        tuna_path = 'products/tests/resources/img/tuna.jpg'
+        salad_path = 'products/tests/resources/img/salad.jpg'
+        cucumber_path = 'products/tests/resources/img/cucumber.jpg'
+
+        tomato_img = SimpleUploadedFile(
+                name='tomato_img.jpg',
+                content=open(tomato_path, 'rb').read(),
+                content_type='image/jpeg')
+
+
+        self.tuna_img = SimpleUploadedFile(
+                name='tuna_img.jpg',
+                content=open(tuna_path, 'rb').read(),
+                content_type='image/jpeg')
+
+
+        salad_img = SimpleUploadedFile(
+                name='salad_img.jpg',
+                content=open(salad_path, 'rb').read(),
+                content_type='image/jpeg')
+
+
+        cucumber_img = SimpleUploadedFile(
+                name='cocumber_img.jpg',
+                content=open(cucumber_path, 'rb').read(),
+                content_type='image/jpeg')
+        
+        self.igr1 = Ingridient.objects.create(name='Tomato', slug='tomato',
+            image=tomato_img)
+        self.igr2 = Ingridient.objects.create(name='Tuna', slug='tuna',
+            image=self.tuna_img)
+        self.igr3 = Ingridient.objects.create(name='Salad', slug='salad',
+            image=salad_img)
+        self.igr4 = Ingridient.objects.create(name='Cocumber', slug='cocumber',
+            image=cucumber_img)
+
+    def __link_product_ingridient(self): 
+        self.product1.ingridients.set([self.igr1, self.igr2,
+            self.igr3, self.igr4])
+    
+        
 
     def __setup_database(self):
         image1_path = 'products/tests/resources/img/chicken_breast.jpg'
@@ -360,3 +419,6 @@ class FoodItemsTestCase(LiveServerTestCase):
         self.product1.nutrition = self.product1_nutrition
 
         self.product1.save()
+
+        self.__setUpIngridients()
+        self.__link_product_ingridient()
