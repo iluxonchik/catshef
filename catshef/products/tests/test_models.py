@@ -136,7 +136,6 @@ class ProductsModelTestCase(TestCase):
     def __link_product_ingridient(self): 
         self.product1.ingridients.set([self.igr1, self.igr2,
             self.igr3, self.igr4])
-
     
     
     def setUp(self):
