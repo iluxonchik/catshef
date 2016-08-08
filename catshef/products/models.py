@@ -229,6 +229,8 @@ class ProductNutrition(models.Model):
         super(ProductNutrition, self).save(*args, **kwargs)
 
 class Ingridient(models.Model):
+    # NOTE: the imaage will be displayed with size 80x80, so use somethimg 
+    # that scales well
     name = models.CharField(max_length=64)
     slug = models.SlugField(unique=True)
     image = models.ImageField(upload_to='ingridients/%Y/%m/%d/')

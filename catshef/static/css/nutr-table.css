@@ -11,8 +11,8 @@
 
 #nutrition-table.performance-facts {
   border: 1px solid black;
-  margin: 20px;
-  float: left;
+  /*margin: 20px;*/
+  /*float: left;*/
   width: 280px;
   padding: 0.5rem;
   font-size: small;
