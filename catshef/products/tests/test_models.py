@@ -86,7 +86,15 @@ class ProductsModelTestCase(TestCase):
             slug='another-chicken-breast',
             description='Just another chicken breast',
             stock=999,
-            price=23)
+            price=23)        
+
+        self.product5 = Product.objects.create(
+            name='Unavailable',
+            slug='unavailable',
+            description='Just an unavailable product',
+            stock=999,
+            price=23,
+            available=False)
 
     def __setUpNutrition(self):
         self.product_nutrition1 = ProductNutrition.objects.create(protein=100, 
@@ -332,3 +340,10 @@ class ProductsModelTestCase(TestCase):
         prod_igr = self.product1.ingridients.all()
         self.assertIn(igr5, prod_igr, 'New ingridient not found in Product')
         self.assertIn(self.product1, igr5.products.all())
+
+
+    def test_available_manager(self):
+        products = Product.active.all()
+        unavailable_products_num = len(Product.objects.filter(available=False))
+        all_products_num = len(Product.objects.all())
+        self.assertEqual(len(products), all_products_num - unavailable_products_num)

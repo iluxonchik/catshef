@@ -7,6 +7,12 @@ from django.core.urlresolvers import reverse
 
 from products.utils.nutrition import CAL2000
 
+class AvailableManager(models.Manager):
+    """
+    Used to query only for available products.
+    """
+    def get_queryset(self):
+        return super(AvailableManager, self).get_queryset().filter(available=True)
 
 class Category(models.Model):
     name = models.CharField(max_length=250)
@@ -43,6 +49,9 @@ class Product(models.Model):
     available = models.BooleanField(default=True)
     created = models.DateField(auto_now_add=True)
     updated = models.DateField(auto_now=True)
+
+    objects = models.Manager()  # default manager
+    active = AvailableManager() 
 
     def get_absolute_url(self):
         return reverse('products:product_detail', kwargs={'slug': self.slug})
@@ -237,5 +246,4 @@ class Ingridient(models.Model):
 
     def __str__(self):
         return self.name
-
 
