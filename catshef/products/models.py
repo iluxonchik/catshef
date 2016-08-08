@@ -1,6 +1,7 @@
 import decimal
 
 from django.db import models
+from django.db.models import Count
 import django.core.exceptions as exceptions
 
 from django.core.urlresolvers import reverse
@@ -47,8 +48,8 @@ class Product(models.Model):
         on_delete=models.SET_NULL, null=True, blank=True)
     ingridients = models.ManyToManyField('Ingridient', related_name='products')
     available = models.BooleanField(default=True)
-    created = models.DateField(auto_now_add=True)
-    updated = models.DateField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
 
     objects = models.Manager()  # default manager
     active = AvailableManager() 
@@ -92,6 +93,22 @@ class Product(models.Model):
         Return an empty list if no images are found.
         """
         return [image.image.url for image in self.get_images()]
+
+    def similar_products(self, manager=None, limit=None):
+        if not manager:
+            manager = Product.active
+
+        category_ids = self.categories.values_list('id', flat=True)
+        similar_posts = manager.filter(categories__in=category_ids).exclude(pk=self.pk)
+        similar_posts = similar_posts.annotate(
+            same_categories=Count('categories')).order_by('-same_categories', '-updated')
+        
+        if limit:
+            similar_posts = similar_posts[:limit]
+        return similar_posts
+
+
+
 
     def __str__(self):
         return self.name

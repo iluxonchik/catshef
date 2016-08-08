@@ -100,7 +100,6 @@ class ProductsModelTestCase(TestCase):
         self.product_nutrition1 = ProductNutrition.objects.create(protein=100, 
             carbs=1, fat=1, calories=413)
 
-
         self.product_nutrition2 = ProductNutrition.objects.create(protein=100,
             carbs=1, fat=1)
 
@@ -347,3 +346,91 @@ class ProductsModelTestCase(TestCase):
         unavailable_products_num = len(Product.objects.filter(available=False))
         all_products_num = len(Product.objects.all())
         self.assertEqual(len(products), all_products_num - unavailable_products_num)
+
+    def test_similar_products(self):
+        product1 = Product.objects.create(
+            name='Turkey',
+            slug='turkey',
+            description='Just a turkey',
+            stock=120,
+            price=15,
+            offer_price=9,
+            available=True)
+
+        product2 = Product.objects.create(
+            name='Protein Powder',
+            slug='protein-powder',
+            description='Protein powder.',
+            stock=120,
+            price=10,
+            offer_price=5,
+            available=True)        
+
+        product3 = Product.objects.create(
+            name='Worm',
+            slug='worm',
+            description='Uhhh, yeah, it\'s a worm...',
+            stock=120,
+            price=19,
+            offer_price=9.7,
+            available=True)        
+
+        product4 = Product.objects.create(
+            name='Chicken Breast',
+            slug='chicken-breast-new',
+            description='Chicken breast',
+            stock=120,
+            price=19,
+            offer_price=9.7,
+            available=True)
+
+        product5 = Product.objects.create(
+            name='Chicken Breast 2',
+            slug='chicken-breast-new2',
+            description='Chicken breast 2',
+            stock=120,
+            price=19,
+            offer_price=9.7,
+            available=False)
+
+        cat1 = Category.objects.create(
+        name='meat', 
+        slug='meat',
+        description='The meat category.', 
+        parent=None)
+
+        cat2 = Category.objects.create(
+        name='Hig Protein', 
+        slug='high-protein',
+        description='High protein category.', 
+        parent=None)
+
+        cat3 = Category.objects.create(
+        name='Things With Wings', 
+        slug='thigns-with-wings',
+        description='If it got wings, you can find it here!', 
+        parent=None)
+
+        product1.categories.set((cat1, cat2, cat3))
+        product2.categories.add(cat2)
+        product4.categories.set((cat1, cat2))
+        product5.categories.add(cat1)
+
+        sim_prod = product1.similar_products()
+        self.assertEqual(len(sim_prod), 2)
+        self.assertEqual(sim_prod[0], product4, 'First product is not '
+                                                'Chicken Breast')
+        self.assertEqual(sim_prod[1], product2, 'Second product is not Protein '
+                                                'Powder')
+
+        sim_prod = product1.similar_products(limit=1)
+        self.assertEqual(len(sim_prod), 1)
+        self.assertEqual(sim_prod[0], product4, 'First product is not '
+                                                'Chicken Breast')
+
+        sim_prod = product1.similar_products(manager=Product.objects)
+        self.assertEqual(len(sim_prod), 3)
+        self.assertEqual(sim_prod[0], product4, 'First product is not '
+                                                'Chicken Breast')
+        self.assertEqual(sim_prod[2], product2, 'Second product is not Protein '
+                                                'Powder')
