@@ -233,4 +233,7 @@ class Ingridient(models.Model):
     slug = models.SlugField(unique=True)
     image = models.ImageField(upload_to='ingridients/%Y/%m/%d/')
 
+    def __str__(self):
+        return self.name
+
 

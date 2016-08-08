@@ -1,0 +1,17 @@
+{% load thumbnail %}
+
+<h2>Ingridient List</h2>
+<div class="row">
+{% for ingridient in ingridients %}
+  <div class="col-xs-12 col-md-3">
+    {% thumbnail ingridient.image "80x80" as im %}
+    <div class="thumbnail">
+      <img src="{{ im.url }}" alt="{{ ingridient }}">
+      <div class="caption" style="text-align:center;">
+        {{ ingridient }}
+      </div>
+    </div>
+    {% endthumbnail %}
+  </div>
+{% endfor %}
+</div>
