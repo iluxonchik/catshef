@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase, SimpleTestCase
 from django.core.urlresolvers import resolve
 
 from products.views import index
@@ -31,3 +31,12 @@ class ProductsURLsTestCase(TestCase):
         self.assertEqual(category.view_name, 'products:category')
         self.assertEqual(category.func.__name__, 'category')
         self.assertEqual(category.kwargs['slug'], 'meat')
+
+    def test_product_related_url(self):
+        """
+        Test that the URL for related products resolvese to the correct view function.
+        """
+        related = resolve('/product/related/chicken-breast/')
+        self.assertEqual(related.view_name, 'products:product_related')
+        self.assertEqual(related.func.__name__, 'product_related')
+        self.assertEqual(related.kwargs['slug'], 'chicken-breast')
