@@ -222,8 +222,77 @@ if(found===false){
 
         </div>
     </div>
+
+    <div class="box-additional">
+            <!-- BEGIN RELATED PRODUCTS -->
+            <div class="related-pro container">
+              <div class="slider-items-products">
+                <div class="new_title center">
+                  <h2>Related Products</h2>
+                </div>
+                <div id="related-products-list">
+                  {% include "products/list_ajax.html" %}
+                </div>
+              </div>
+            </div>
+            <!-- end related product -->
+            
+          </div>
 </div>
 
 </div>
 </div>
 {% endblock content %}
+
+{% block domready %}
+    var page = 1;
+    var empty_page = false;
+    var block_request = false;
+
+    function load_products(force_load=false) {
+        if (empty_page) {
+            return false;
+        }
+
+        var margin = $(document).height() - $(window).height() - 200;
+        if ($(window).scrollTop() > (margin && !empty_page && !block_request) || force_load) {
+            block_request = true; // prevent other AJAX calls from happening, while this one is active
+            $.get('/product/related/{{ product.slug }}/?page=' + page, function(data) {
+                if (data == '') {
+                    empty_page = true;
+                } else {
+                    block_request = false;
+                    $('#related-products-list').append(data);
+                }
+            });
+            page += 1;
+            return true; // images have been loaded
+        }
+        return false;
+    }
+
+    load_products(true); // force load product list on page load
+
+    /*
+        Product loading "hack": If the resolution is hight enough, there will be no scroll bar, therefore noproducts scroll event, so at most X products will be loaded.
+        The timer forces the check every second to get arround that problem.
+    */
+
+    function handle_timeout() {
+        var images_loaded = load_products();
+        if (images_loaded) {
+            window.setTimeout(handle_timeout, 1000);
+        }
+        /* 
+            if no images have been loaded (images_loaded == false), this means that either:
+                1. current window position is not low enough, so that means that the scroll event will fire next time, so
+                   we don't need the timeout anymore
+                2. no more products are available, so no need to make unneceassary requests
+        */
+    }
+    
+    window.setTimeout(handle_timeout, 1000);
+
+    $(window).scroll(load_products);
+
+{% endblock domready %}

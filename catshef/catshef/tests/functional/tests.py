@@ -146,8 +146,6 @@ class FoodItemsTestCase(LiveServerTestCase):
         with self.assertRaises(exceptions.NoSuchElementException):
             self.browser.find_element_by_xpath('//div[@aria-hidden="false"]')
 
-
-
         # So she clicks on "Chicken Breast".
         chicken_breast = [product for product in products 
                                         if 'Chicken Breast' in product.text][0]
@@ -217,6 +215,16 @@ class FoodItemsTestCase(LiveServerTestCase):
         self.assertIn('Salad', nutr_div.text)
         self.assertIn('Cocumber', nutr_div.text)
 
+        # A bit further down there is a "Related Products" list
+        # She notices that that list contains "Tukrey Breast" is in the first 
+        # position, while "Tuna" is in the second
+
+        related_div = self.browser.find_element_by_id('related-products-list')
+        elems = related_div.find_elements_by_class_name('col-m')
+        self.assertEqual(len(elems), 2)
+        self.assertIn('Turkey Breast', elems[0].text)
+        self.assertIn('Tuna', elems[1].text)
+
         # She also notices that "Chicken Breast" belongs to the "meat" and
         # "high protein" categories. She can click on any of them.
         meat_cat = self.browser.find_element_by_xpath('//a/span[@class="label label-success" and text()="meat"]')
@@ -239,11 +247,6 @@ class FoodItemsTestCase(LiveServerTestCase):
         ## TODO: decide if we're gonna have both: "Related Products" and 
         ## "Often Bought Together" secitions or just one of them.
 
-        ## She also notices that there are some "Related Products" at the
-        ## bottom. One of the products in that list is "Chicken Breast". She
-        ## clicks on it and is taken to the deatail page of that product.
-        ## After that, she goes back to the previous page.
-
         ## She also notices that there is a "Often Bought Together" section,
         ## which contains other products. The first product on the list, is
         ## "Water". She clicks on it and is taken to the deatail page of that 
@@ -265,12 +268,12 @@ class FoodItemsTestCase(LiveServerTestCase):
         self.assertInHTML('<a href="/product/tuna/">Tuna</a>', browser_html)
         self.assertInHTML('<a href="/product/chicken-breast/">Chicken Breast</a>', browser_html)
 
-        self.fail('Finish the test')
 
         # Exited about all of that, she decides to back to the main page
         # and see what other options there are. She scrolls to the end of the
         # page and notices that more products are loaded. All of that happens
         # without page being refreshed.
+        self.fail('Finish the test')
 
 
     def __setUpIngridients(self):

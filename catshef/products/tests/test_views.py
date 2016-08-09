@@ -1,5 +1,5 @@
 from django.test import TestCase, RequestFactory
-from products.views import index, product_detail, category
+from products.views import index, product_detail, category, product_related
 from django.core.urlresolvers import reverse
 from products.models import Product, Category
 
@@ -115,3 +115,19 @@ class CategoryListTestCase(CatShefBaseTestCase):
         context = response.context
         self.assertIsNotNone(context['category'])
         self.assertEqual(self.cat1, context['category'])
+
+class RelatedProductsTestCase(CatShefBaseTestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_basic(self):
+        """
+        Teset that the related products list view returns a 200 response and 
+        uses the correct template.
+        """
+        request = self.factory.get('/product/related/chicken-breast/',
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        with self.assertTemplateUsed('products/list_ajax.html'):
+            response = product_related(request, 'chicken-breast')
+            self.assertEqual(response.status_code, 200)
