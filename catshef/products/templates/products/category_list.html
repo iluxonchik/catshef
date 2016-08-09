@@ -17,7 +17,11 @@
     var empty_page = false;
     var block_request = false;
 
-    function load_products(force_load=false) {   
+    function load_products(force_load=false) {
+        if (empty_page) {
+            return false;
+        }
+             
         var margin = $(document).height() - $(window).height() - 200;
         if ($(window).scrollTop() > margin && !empty_page && !block_request || force_load) {
             block_request = true; // prevent other AJAX calls from happening, while this one is active
