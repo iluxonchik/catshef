@@ -2,7 +2,6 @@
 Functional tests. "#" is used for user story comments and "##" is used for 
 notes to developers and are not actually part of the user story.
 """
-import pdb
 from django.test import LiveServerTestCase, override_settings
 from selenium import webdriver
 from selenium.common import exceptions
