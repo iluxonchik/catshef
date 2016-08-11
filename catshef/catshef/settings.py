@@ -132,6 +132,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+# django.auth settings
+LOGIN_URL = '/account/login/'  # TODO: decide on url
 
 # django-allauth settings
 AUTHENTICATION_BACKENDS += (
@@ -155,6 +157,16 @@ INSTALLED_APPS += [
 ]
 
 SITE_ID = 1
+
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+# Where to redirect authenticated users when they access login/signup pages 
+ACCOUNT_LOGIN_REDIRECT_URL = '/account/profile/'  # TODO: decide on url
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'http'
+# TODO: ACCOUNT _SIGNUP_FORM_CLASS = 'something' [http://stackoverflow.com/questions/12303478/how-to-customize-user-profile-when-using-django-allauth]
+ACCOUNT_USERNAME_REQUIRED = False
+# TODO: return something more appropriate, like the User's name
+ACCOUNT_USER_DISPLAY = lambda u: u.email
 
 
 # -- TESTING SETTINGS -- #
