@@ -15,6 +15,8 @@ from catshef.tests.functional.tests import SITE_NAME
 
 class UserAccountsTestCase(LiveServerTestCase):
 
+    fixtures = ['allauth_site_fixture.json',]
+
     def setUp(self):
         self.browser = webdriver.Firefox()
         self.browser.implicitly_wait(2)
@@ -24,7 +26,7 @@ class UserAccountsTestCase(LiveServerTestCase):
     def tearDown(self):
         self.browser.quit()
 
-    @override_settings(DEBUG = True)
+    @override_settings(DEBUG=True)
     def test_basic_user_accounts(self):
         """
         Tests the basic user account functionality. Includes: local site 
@@ -39,7 +41,7 @@ class UserAccountsTestCase(LiveServerTestCase):
         # details: # name(required), email(required), password(required) and
         # phone number(optional)
         # He has to enter the password twice, in separate fields.
-        
+
         ## For now, the phone number field will be very simple, later on
         ## make it pretty (like a flag selector for country, etc).
 
