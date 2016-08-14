@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'sorl.thumbnail',
     'products',
+    'account',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -163,11 +164,16 @@ ACCOUNT_EMAIL_REQUIRED = True
 # Where to redirect authenticated users when they access login/signup pages 
 LOGIN_REDIRECT_URL = '/account/profile/'  # TODO: decide on url
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'http'
-# TODO: ACCOUNT _SIGNUP_FORM_CLASS = 'something' [http://stackoverflow.com/questions/12303478/how-to-customize-user-profile-when-using-django-allauth]
 ACCOUNT_USERNAME_REQUIRED = False
 # TODO: return something more appropriate, like the User's name
+# TODO: ACCOUNT _SIGNUP_FORM_CLASS = 'something' [http://stackoverflow.com/questions/12303478/how-to-customize-user-profile-when-using-django-allauth]
 ACCOUNT_USER_DISPLAY = lambda u: u.email
 
+
+# django-phonenumber-field settings
+INSTALLED_APPS += [
+    'phonenumber_field',
+]
 
 # -- TESTING SETTINGS -- #
 # TODO: organize settings files (Issue #56)
