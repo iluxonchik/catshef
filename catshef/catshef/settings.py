@@ -161,7 +161,7 @@ SITE_ID = 1
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
 # Where to redirect authenticated users when they access login/signup pages 
-ACCOUNT_LOGIN_REDIRECT_URL = '/account/profile/'  # TODO: decide on url
+LOGIN_REDIRECT_URL = '/account/profile/'  # TODO: decide on url
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'http'
 # TODO: ACCOUNT _SIGNUP_FORM_CLASS = 'something' [http://stackoverflow.com/questions/12303478/how-to-customize-user-profile-when-using-django-allauth]
 ACCOUNT_USERNAME_REQUIRED = False
