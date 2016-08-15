@@ -167,6 +167,7 @@ ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'http'
 ACCOUNT_USERNAME_REQUIRED = False
 # TODO: return something more appropriate, like the User's name
 # TODO: ACCOUNT _SIGNUP_FORM_CLASS = 'something' [http://stackoverflow.com/questions/12303478/how-to-customize-user-profile-when-using-django-allauth]
+ACCOUNT_SIGNUP_FORM_CLASS = 'account.forms.SignUpForm'
 ACCOUNT_USER_DISPLAY = lambda u: u.email
 
 
@@ -175,6 +176,13 @@ INSTALLED_APPS += [
     'phonenumber_field',
 ]
 
+"""
+# django-nose sttings
+INSTALLED_APPS += [
+    'django_nose',
+]
+TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+"""
 # -- TESTING SETTINGS -- #
 # TODO: organize settings files (Issue #56)
 
