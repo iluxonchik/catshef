@@ -37,36 +37,36 @@
         <div class="box">
           <div class="content registerBox" style="display:none;">
            <div class="form">
-            <form method="post" html="{:multipart=>true}" data-remote="true" action="/register" accept-charset="UTF-8">              
+            <form id="modal-login-form" method="post" html="{:multipart=>true}" data-remote="true" action="/register" accept-charset="UTF-8">              
               
               {% for hidden in form.hidden_fields %}
                   {{ hidden }}
               {% endfor %}
 
-              {{ form.name.errors }}
-              {% with field=form.name|add_class:'form-control' %}
-                {{ field|add_placeholder:'Name' }}
-              {% endwith %}
+              <div class="has-error" id="name-error-div"></div>
+                {% with field=form.name|add_class:'form-control' %}
+                  {{ field|add_placeholder:'Name' }}
+                {% endwith %}
 
-              {{ form.email.errors }}
-              {% with field=form.email|add_class:'form-control' %}
-                {{ field|add_placeholder:'Email' }}
-              {% endwith %}
+              <div class="has-error" id="email-error-div"></div>
+                {% with field=form.email|add_class:'form-control' %}
+                  {{ field|add_placeholder:'Email' }}
+                {% endwith %}
 
-              {{ form.phone.errors }}
-              {% with field=form.phone|add_class:'form-control' %}
-                {{ field|add_placeholder:'Phone Number' }}
-              {% endwith %}
+              <div class="has-error" id="phone-error-div"></div>
+                {% with field=form.phone|add_class:'form-control' %}
+                  {{ field|add_placeholder:'Phone Number' }}
+                {% endwith %}
 
-              {{ form.password1.errors }}
-              {% with field=form.password1|add_class:'form-control' %}
-                {{ field|add_placeholder:'Password' }}
-              {% endwith %}
+              <div class="has-error" id="password1-error-div"></div>
+                {% with field=form.password1|add_class:'form-control' %}
+                  {{ field|add_placeholder:'Password' }}
+                {% endwith %}
 
-              {{ form.password2.errors }}
-              {% with field=form.password2|add_class:'form-control' %}
-                {{ field|add_placeholder:'Repeat Password' }}
-              {% endwith %}
+              <div class="has-error" id="password2-error-div"></div>
+                {% with field=form.password2|add_class:'form-control' %}
+                  {{ field|add_placeholder:'Repeat Password' }}
+                {% endwith %}
 
               <input class="btn btn-default btn-register" type="submit" value="Create account" name="commit">
             <!--
@@ -99,3 +99,10 @@
 
 <link rel="stylesheet" type="text/css" href="{% static "css/login-modal.css" %}">
 <script type="text/javascript" src="{% static "js/login-modal.js" %}"></script>
+
+<script type="text/javascript">
+  $('#modal-login-form').submit(function(e) {
+    registerAjax();
+    e.preventDefault();
+  });
+</script>
