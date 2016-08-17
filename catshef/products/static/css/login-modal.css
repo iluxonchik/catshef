@@ -175,7 +175,8 @@
     background-color: rgba(0,0,0,0.23);
     color: #FFFFFF;
 }
-.login .box .form input[type="text"], .login .box .form input[type="password"] {
+.login .box .form input[type="text"], .login .box .form input[type="password"],
+.login .box .form input[type="tel"], .login .box .form input[type="email"] {
     border-radius: 3px;
     border: none;
     color: #333333;

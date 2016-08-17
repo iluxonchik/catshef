@@ -120,7 +120,7 @@
             <div class="head-t">
                 <ul class="card">
                     <li><a href="wishlist.html" ><i class="fa fa-heart" aria-hidden="true"></i>Wishlist</a></li>
-                    <li><a data-toggle="modal" href="javascript:void(0)" onclick="openLoginModal();"><i class="fa fa-user" aria-hidden="true"></i>Login/Register</a></li>
+                    <li><a id="login-reg-modal-btn" data-toggle="modal" href="javascript:void(0)" onclick="openLoginModal();"><i class="fa fa-user" aria-hidden="true"></i>Login/Register</a></li>
                     <li><a href="about.html" ><i class="fa fa-file-text-o" aria-hidden="true"></i>Order History</a></li>
                     <li><a href="shipping.html" ><i class="fa fa-ship" aria-hidden="true"></i>Shipping</a></li>
                 </ul>   
@@ -310,7 +310,7 @@
     <br />
 
 
-{% include "products/login-modal.html" %}
+{% include "products/login-modal.html" with form=modal_signup_form %}
 
 <!--footer-->
 <div class="footer">

@@ -1,3 +1,5 @@
+from time import sleep
+
 from django.test import LiveServerTestCase, override_settings
 
 from selenium import webdriver
@@ -26,28 +28,28 @@ class UserAccountsTestCase(LiveServerTestCase):
     def tearDown(self):
         self.browser.quit()
 
-    def get_element_by_xpath(self, xpath, elem=self.browser):
-        return elem.wait.until(
+    def get_element_by_xpath(self, xpath):
+        return self.browser.wait.until(
             EC.presence_of_element_located((By.XPATH, xpath)))
     
-    def get_element_by_id(self, id, elem=self.browser):
-        return elem.wait.until(
+    def get_element_by_id(self, id):
+        return self.browser.wait.until(
             EC.presence_of_element_located((By.ID, id)))
 
-    def get_button_by_xpath(self, xpath, elem=self.browser):
-        return elem.wait.until(
+    def get_button_by_xpath(self, xpath):
+        return self.browser.wait.until(
             EC.element_to_be_clickable((By.XPATH, xpath)))
 
-    def get_button_by_id(self, element_id, elem=self.browser):
-        return elem.wait.until(EC.element_to_be_clickable((By.ID, id)))
+    def get_button_by_id(self, element_id):
+        return self.browser.wait.until(EC.element_to_be_clickable((By.ID, id)))
 
-    def is_element_present(self, by, selector, elem=self.browser):
+    def is_element_present(self, by, selector):
         """
         Check if an element is present on the current page. Allows to be tested
         with self.assertTrue()/self.assertFalse().
         """
         try:
-            elem.wait.until(
+            self.browser.wait.until(
                 EC.presence_of_element_located((by, selector)))
             return True
         except NoSuchElementException:
@@ -70,19 +72,19 @@ class UserAccountsTestCase(LiveServerTestCase):
         # phone number(optional)
         # He has to enter the password twice, in separate fields.
         home_page = self.browser.get(self.live_server_url + '/')
-        log_reg_btn = self.get_element_by_id('login-register-btn')
+        log_reg_btn = self.get_element_by_id('login-reg-modal-btn')
         log_reg_btn.click()
         ## make sure modal is showoing
         modal = self.get_element_by_xpath(
-            '//div[@class="modal fade log in" and @id="login-modal"]')
+            '//div[@class="modal fade login in" and @id="login-modal"]')
         
         ## make sure modal is "Login"
         modal_title = self.get_element_by_xpath('//h4[@class="modal-title"]')
-        self.assertEqual(modal_title.text, 'Login')
+        self.assertEqual(modal_title.text, 'Login with')
 
         reg_link = modal.find_element_by_link_text('create an account')
         reg_link.click()
-
+        sleep(2)  # give JS time to change the title
         ## make sure modal changed to "Register"
         modal_title = self.get_element_by_xpath('//h4[@class="modal-title"]')
         self.assertEqual(modal_title.text, 'Register with')        
@@ -91,24 +93,28 @@ class UserAccountsTestCase(LiveServerTestCase):
         ## make it pretty (like a flag selector for country, etc).
 
         # He enters the following values for each: {'name': 'John Terry',
-        # 'email':'john@rules.com', # 'password':'johnisthebest'}
+        # 'email':'john@rules.com', 'phone':'+351960000000', 
+        # 'password':'johnisthebest'}
 
         ## TODO: adjust element id names, with the ones generated
-        name = modal.get_element_by_id('id_name')
+        name = modal.find_element_by_id('id_name')
         name.send_keys('John Terry')
         
-        email = modal.get_element_by_id('id_email')
-        name.send_keys('john@rules.com')
-        
-        pwd1 = modal.get_element_by_id('id_password1')
-        name.send_keys('johnisthebest')
+        email = modal.find_element_by_id('id_email')
+        email.send_keys('john@rules.com')
 
-        pwd1 = modal.get_element_by_id('id_password2')
-        name.send_keys('johnisthebest')
+        phone = modal.find_element_by_id('id_phone')
+        phone.send_keys('+351960000000')
+        
+        pwd1 = modal.find_element_by_id('id_password1')
+        pwd1.send_keys('johnisthebest')
+
+        pwd2 = modal.find_element_by_id('id_password2')
+        pwd2.send_keys('johnisthebest')
 
         # After that, he clicks on the 'Create Account' button at the bottom.
-        submit_btn = self.get_button_by_xpath(
-            '//input[@value="Create account"]', elem=modal)
+        submit_btn = modal.find_element_by_xpath(
+            '//input[@value="Create account"]')
         submit_btn.click()
 
         self.fail('Finish the test!')
