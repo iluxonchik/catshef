@@ -15,7 +15,6 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
 
@@ -45,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'sorl.thumbnail',
     'products',
+    'account',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -57,6 +57,11 @@ MIDDLEWARE_CLASSES = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+AUTHENTICATION_BACKENDS = (
+    # default value
+    'django.contrib.auth.backends.ModelBackend',
+)
 
 ROOT_URLCONF = 'catshef.urls'
 
@@ -72,6 +77,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'products.context_processors.site_name',
+                'products.context_processors.login_modal_form',
             ],
         },
     },
@@ -109,7 +115,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
 
@@ -128,3 +133,61 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# django.auth settings
+LOGIN_URL = '/account/login/'  # TODO: decide on url
+
+# django-allauth settings
+AUTHENTICATION_BACKENDS += (
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
+INSTALLED_APPS += [
+    # The Django sites framework is required
+    'django.contrib.sites',
+
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+
+    # providers to enable: (uncomment as needed)
+    #'allauth.socialaccount.providers.facebook',
+    #'allauth.socialaccount.providers.google',
+    #'allauth.socialaccount.providers.twitter',
+    #'allauth.socialaccount.providers.instagram',
+]
+
+SITE_ID = 1
+
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+# Where to redirect authenticated users when they access login/signup pages 
+LOGIN_REDIRECT_URL = '/account/profile/'  # TODO: decide on url
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'http'
+ACCOUNT_USERNAME_REQUIRED = False
+# TODO: return something more appropriate, like the User's name
+# TODO: ACCOUNT _SIGNUP_FORM_CLASS = 'something' [http://stackoverflow.com/questions/12303478/how-to-customize-user-profile-when-using-django-allauth]
+ACCOUNT_SIGNUP_FORM_CLASS = 'account.forms.SignUpForm'
+ACCOUNT_USER_DISPLAY = lambda u: u.email
+
+
+# django-phonenumber-field settings
+INSTALLED_APPS += [
+    'phonenumber_field',
+]
+
+"""
+# django-nose sttings
+INSTALLED_APPS += [
+    'django_nose',
+]
+TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+"""
+# -- TESTING SETTINGS -- #
+# TODO: organize settings files (Issue #56)
+
+FIXTURE_DIRS = (
+    os.path.join(BASE_DIR, 'catshef/tests/fixtures/'),
+)
+# -- END TESTING SETTINGS -- #

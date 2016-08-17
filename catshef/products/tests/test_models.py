@@ -5,7 +5,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
 import django.core.exceptions as exceptions
 
-from products.models import Product, Category, ProductImage, ProductNutrition, Ingridient
+from products.models import (Product, Category, ProductImage, ProductNutrition, 
+    Ingridient)
 
 class ProductsModelTestCase(TestCase):
 
