@@ -1,7 +1,7 @@
 """
 Custom context processors for 'products' app.
 """
-from allauth.account.forms import SignupForm
+from allauth.account.forms import SignupForm, LoginForm
 
 def site_name(request):
     """
@@ -14,4 +14,6 @@ def login_modal_form(self):
     """
     Puts the login modal form in the context.
     """
-    return {'modal_signup_form':SignupForm()}
+    lf = LoginForm()
+    lf.fields['login'].auto_id = 'id_%s2'
+    return {'modal_signup_form':SignupForm(), 'modal_login_form':lf}

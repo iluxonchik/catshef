@@ -1,5 +1,6 @@
 /* MODAL SETTINGS */
-SAME_URL_AFTER_REG = true; // prevent redirect after successful Registration(if set to true, the page will simply reload, i.e. the user will remain on the same url)
+var SAME_URL_AFTER_REG = true; // prevent redirect after successful Registration (if set to true, the page will simply reload, i.e. the user will remain on the same url)
+var SAME_URL_AFTER_LOGIN = true; // prevent redirect after successful Login (if set to true, the page will simply reload, i.e. the user will remain on the same url)
 
 /**
 * Shows the modal form error div
@@ -55,7 +56,7 @@ function showRegisterForm(){
         $('.modal-title').html('Register with');
     }); 
     $('.error').removeClass('alert alert-danger').html('');
-       
+
 }
 
 function showLoginForm(){
@@ -66,7 +67,7 @@ function showLoginForm(){
         });
         $('.modal-title').html('Login with');
     });       
-        hideModalErrorDiv();
+    hideModalErrorDiv();
 }
 
 function openLoginModal(){
@@ -86,32 +87,42 @@ function openRegisterModal(){
 }
 
 function loginAjax(){
-    /* 
-    $.post( "/login", function( data ) {
-            if(data == 1){
-                window.location.replace("/index");            
+    $.post(
+        '/account/login/',
+        $('#modal-login-form').serialize()
+        ).done(function(data, textStatus, jqXHR) {
+        // TODO: notify user of successful login
+        // NOTE: use available signals, this shouldn't be done here.
+        if (!SAME_URL_AFTER_LOGIN) {
+            if (data['location']) {
+                window.location.href = data['location']
             } else {
-                 shakeModal(); 
+                // if no redirect url provided, simply reload the current page
+                location.reload();
             }
-        });
-    */
-    shakeModal();
+        } else {
+            location.reload();
+        }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        // yep, as simple as that
+        shakeModal();
+    });
 }
 
 function shakeModal(){
     $('#login-modal .modal-dialog').addClass('shake');
-             showModalErrorDiv().html("Invalid email/password combination");
-             $('input[type="password"]').val('');
-             setTimeout( function(){ 
-                $('#login-modal .modal-dialog').removeClass('shake'); 
+    showModalErrorDiv().html("Invalid email/password combination");
+    $('input[type="password"]').val('');
+    setTimeout( function(){ 
+        $('#login-modal .modal-dialog').removeClass('shake'); 
     }, 1000 ); 
 }
 
 function registerAjax() {
     $.post(
         '/account/signup/',
-        $('#modal-login-form').serialize()
-    ).done(function(data, textStatus, jqXHR) {
+        $('#modal-register-form').serialize()
+        ).done(function(data, textStatus, jqXHR) {
         // TODO: notify user of successful login
         // NOTE: use available signals, this shouldn't be done here.
         if (!SAME_URL_AFTER_REG) {
@@ -138,5 +149,5 @@ function registerAjax() {
                 });
             }
         }
-    })
-};
+    });
+}

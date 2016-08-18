@@ -39,8 +39,6 @@
     <script src="{% static "owl-carousel/owl.carousel.js" %}"></script>
     <!-- //Owl Carousel Setup -->
 
-
-
     <!-- AJAX Setup -->
     <script type="text/javascript">
         var csrftoken = $.cookie('csrftoken');
@@ -310,7 +308,7 @@
     <br />
 
 
-{% include "products/login-modal.html" with form=modal_signup_form %}
+{% include "products/login-modal.html" with reg_form=modal_signup_form login_form=modal_login_form %}
 
 <!--footer-->
 <div class="footer">
@@ -444,6 +442,7 @@
 
   });
   </script>
+
 {% block bodyend %}
 {% endblock bodyend %}
 </body>
