@@ -14,6 +14,4 @@ def login_modal_form(self):
     """
     Puts the login modal form in the context.
     """
-    lf = LoginForm()
-    lf.fields['login'].auto_id = 'id_%s2'
-    return {'modal_signup_form':SignupForm(), 'modal_login_form':lf}
+    return {'modal_signup_form':SignupForm(), 'modal_login_form':LoginForm()}

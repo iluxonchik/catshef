@@ -41,14 +41,23 @@
 
     <!-- AJAX Setup -->
     <script type="text/javascript">
+        function getCookie(name) {
+              var value = "; " + document.cookie;
+              var parts = value.split("; " + name + "=");
+              if (parts.length == 2) return parts.pop().split(";").shift();
+        }
+
         var csrftoken = $.cookie('csrftoken');
+        //var csrftoken = getCookie('csrftoken');
         function csrfSafeMethod(method) {
         // these methods do not require CSRF protection
         return(/^(GET|HEAD|OPTIONS|TRACE)$/.test(method))
     }
+
     $.ajaxSetup({
         beforeSend: function(xhr, settings) {
             if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                console.log('Setting cookie');
                 xhr.setRequestHeader('X-CSRFToken', csrftoken);
             }
         }
@@ -118,9 +127,14 @@
             <div class="head-t">
                 <ul class="card">
                     <li><a href="wishlist.html" ><i class="fa fa-heart" aria-hidden="true"></i>Wishlist</a></li>
-                    <li><a id="login-reg-modal-btn" data-toggle="modal" href="javascript:void(0)" onclick="openLoginModal();"><i class="fa fa-user" aria-hidden="true"></i>Login/Register</a></li>
                     <li><a href="about.html" ><i class="fa fa-file-text-o" aria-hidden="true"></i>Order History</a></li>
                     <li><a href="shipping.html" ><i class="fa fa-ship" aria-hidden="true"></i>Shipping</a></li>
+                    {% if request.user.is_authenticated %}
+                        <li><a id="profile-header-menu" href="/account/profile/"><i class="fa fa-user" aria-hidden="true"></i>Profile</a></li>                       
+                        <li><a id="logout-header-menu" href="/account/logout/"><i class="fa fa-sign-out" aria-hidden="true"></i>Logout</a></li>
+                    {% else %}
+                        <li><a id="login-reg-modal-btn" data-toggle="modal" href="javascript:void(0)" onclick="openLoginModal();"><i class="fa fa-user" aria-hidden="true"></i>Login/Register</a></li>
+                    {% endif %}
                 </ul>   
             </div>
             

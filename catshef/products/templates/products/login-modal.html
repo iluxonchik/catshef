@@ -91,6 +91,8 @@
                   {{ field|add_placeholder:'Repeat Password' }}
                 {% endwith %}
 
+              {% csrf_token %}
+
               <input class="btn btn-default btn-register" type="submit" value="Create account" name="commit">
             <!--
               <input id="id_name" class="form-control" type="text" placeholder="Name" name="name">

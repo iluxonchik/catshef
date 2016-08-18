@@ -1,6 +1,10 @@
+import re
 from time import sleep
 
+from .utils import find_urls
+
 from django.test import LiveServerTestCase, override_settings
+from django.core import mail
 
 from selenium import webdriver
 from selenium.common import exceptions
@@ -13,7 +17,6 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
 # TODO: move to a serparate, shared file
 from catshef.tests.functional.tests import SITE_NAME 
-
 
 class UserAccountsTestCase(LiveServerTestCase):
 
@@ -112,26 +115,38 @@ class UserAccountsTestCase(LiveServerTestCase):
         pwd2 = modal.find_element_by_id('id_password2')
         pwd2.send_keys('johnisthebest')
 
+        prev_url = self.browser.current_url
         # After that, he clicks on the 'Create Account' button at the bottom.
         submit_btn = modal.find_element_by_xpath(
             '//input[@value="Create account"]')
         submit_btn.click()
+        sleep(2)  # give browser time to reload the page
 
-        self.fail('Finish the test!')
         # He's redirected to the page he was on before, and there is a message
         # asking him to confirm his email address.
-
+        self.assertEqual(self.browser.current_url, prev_url)
 
         # He notices that there is no more "Login/Register" links at the top,
         # instead, he finds two new links at the top: "Profile" and "Logout".
+        with self.assertRaises(TimeoutException):
+            self.get_element_by_id('login-reg-modal-btn')
+
+        self.assertTrue(self.is_element_present(By.ID, 'profile-header-menu'))
+        self.assertTrue(self.is_element_present(By.ID, 'logout-header-menu'))
 
         # He notices that he has recieved a new email with a link to confirm his
         # email address, he clicks on that link, after which he's taken
-        # to his profile page. 
+        # to his profile page.
+        self.assertEqual(len(mail.outbox), 1, 'Registration email not sent.')
+        confirmation_url = find_urls(mail.outbox[0].body)
+        self.assertEqual(len(confirmation_url), 1, 'Confirmation email message'
+            ' does not have the expected confirmation url.')
+        self.browser.get(confirmation_url)
 
         # At the top, there is a green success message stating that his email
         # address has been successfully confirmed and there is a "(Confirmed)"
         # green text next to his email address on his profile page.
+        self.fail('Finish the test!')
 
         ## The "unconfirmed email address" won't change much, except when he
         ## tries to proceed with the order form the cart,the user will be
