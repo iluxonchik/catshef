@@ -81,6 +81,13 @@
         {% endblock domready %}
     });
 </script>
+
+<!-- Material Design Lite -->
+<link href="{% static "css/material.min.css" %}" rel="stylesheet"> 
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script defer src="https://code.getmdl.io/1.2.0/material.min.js"></script>
+<!-- //Material Design Lite -->
+
 <!-- start-smoth-scrolling -->
 <link href="{% static "css/font-awesome.css" %}" rel="stylesheet"> 
 <link href='{% static "//fonts.googleapis.com/css?family=Montserrat:400,700" %}' rel='stylesheet' type='text/css'>
@@ -320,7 +327,6 @@
     <!-- TODO: this is a temporary solution, this should be done in CSS -->
     <br />
     <br />
-
 
 {% include "products/login-modal.html" with reg_form=modal_signup_form login_form=modal_login_form %}
 
