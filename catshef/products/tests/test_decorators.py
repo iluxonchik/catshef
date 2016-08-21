@@ -28,10 +28,12 @@ class AJAXRequiredDecoratorTest(TestCase):
     def test_ajax_requried_decorator(self):
         # Non-AJAX request
         request = self.factory.get('/product/related/chicken_breast/?page=1')
+        request.session = {}
         response = product_related(request, 'chicken-breast')
         self.assertEqual(response.status_code, 400)
 
         request = self.factory.get('/product/related/chicken_breast/?page=1',
             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        request.session = {}
         response = product_related(request, 'chicken-breast')
         self.assertEqual(response.status_code, 200)

@@ -38,6 +38,7 @@ class IndexViewTestCase(CatShefBaseTestCase):
         template.
         """
         request = self.factory.get('/')
+        request.session = {}
         response = index(request)
 
         with self.assertTemplateUsed('products/index.html'):
@@ -67,6 +68,7 @@ class ProductDetailTestCase(CatShefBaseTestCase):
         the correct template and has the correct context.
         """
         request = self.factory.get('/product/chicken-breast/')
+        request.session = {}
 
         with self.assertTemplateUsed('products/detail.html'):
             response = product_detail(request, slug='chicken-breast')
@@ -100,6 +102,7 @@ class CategoryListTestCase(CatShefBaseTestCase):
         the correct template and has the correct context.
         """
         request = self.factory.get('/category/meat/')
+        request.session = {}
 
         with self.assertTemplateUsed('products/category_list.html'):
             response = category(request, slug='meat')
@@ -127,6 +130,7 @@ class RelatedProductsTestCase(CatShefBaseTestCase):
         """
         request = self.factory.get('/product/related/chicken-breast/',
             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        request.session = {}
 
         with self.assertTemplateUsed('products/list_ajax.html'):
             response = product_related(request, 'chicken-breast')
