@@ -3,6 +3,7 @@ Custom context processors for 'products' app.
 """
 from allauth.account.forms import SignupForm, LoginForm
 
+
 def site_name(request):
     """
     Sets the site name in context. Since the name of the site is not yet
@@ -10,7 +11,7 @@ def site_name(request):
     """
     return {'site_name':'CatFood'}
 
-def login_modal_form(self):
+def login_modal_form(request):
     """
     Puts the login modal form in the context.
     """

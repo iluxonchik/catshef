@@ -78,6 +78,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'products.context_processors.site_name',
                 'products.context_processors.login_modal_form',
+                'account.context_processors.snackbar_data',
             ],
         },
     },
