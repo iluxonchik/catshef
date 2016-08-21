@@ -1,6 +1,7 @@
 /* MODAL SETTINGS */
 var SAME_URL_AFTER_REG = true; // prevent redirect after successful Registration (if set to true, the page will simply reload, i.e. the user will remain on the same url)
 var SAME_URL_AFTER_LOGIN = true; // prevent redirect after successful Login (if set to true, the page will simply reload, i.e. the user will remain on the same url)
+var SAME_URL_AFTER_LOGOUT = true; // prevent redirect after successful Logout (if set to true, the page will simply reload, i.e. the user will remain on the same url)
 
 /**
 * Shows the modal form error div
@@ -150,4 +151,22 @@ function registerAjax() {
             }
         }
     });
+}
+
+function logoutAjax() {
+    $.post('account/logout/').done(function(data, textStatus, jqXHR) {
+        if (!SAME_URL_AFTER_LOGOUT) {
+            if (data['location']) {
+                window.location.href = data['location']
+            } else {
+                // if no redirect url provided, simply reload the current page
+                location.reload();
+            }
+        } else {
+            location.reload();
+        }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        // if logouit fails, redirect the user to the logout page
+        window.location.herf = '/account/logout/'
+    })
 }
