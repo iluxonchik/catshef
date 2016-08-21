@@ -1,6 +1,7 @@
 from catshef.snackbar import SnackBar
+from catshef.exceptions import ArgumentError
 
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, override_settings
 from django.contrib import messages
 
 from django.http import HttpRequest
@@ -75,5 +76,5 @@ class SnackBarTestCase(SimpleTestCase):
         snackbar = SnackBar.get(self.request)
         self.assertEqual(snackbar.get_js(), expected_js_2)
 
-
-
+    def test_get_on_empty(self):
+        self.assertEqual(len(SnackBar.get(self.request)), 0)
