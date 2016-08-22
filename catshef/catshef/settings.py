@@ -178,6 +178,12 @@ INSTALLED_APPS += [
     'phonenumber_field',
 ]
 
+# convert messages to SnackBars(toasts, actually)
+
+MIDDLEWARE_CLASSES += [
+    'catshef.middleware.mtosmiddleware.MessageToSnackBarMiddleware',
+]
+
 """
 # django-nose sttings
 INSTALLED_APPS += [
