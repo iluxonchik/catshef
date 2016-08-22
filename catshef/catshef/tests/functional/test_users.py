@@ -125,6 +125,7 @@ class UserAccountsTestCase(LiveServerTestCase):
         # He's redirected to the page he was on before, and there is a message
         # asking him to confirm his email address.
         self.assertEqual(self.browser.current_url, prev_url)
+        ## The message will be a snackbar
 
         # He notices that there is no more "Login/Register" links at the top,
         # instead, he finds two new links at the top: "Profile" and "Logout".
@@ -142,16 +143,37 @@ class UserAccountsTestCase(LiveServerTestCase):
         self.assertEqual(len(confirmation_url), 1, 'Confirmation email message'
             ' does not have the expected confirmation url.')
         self.browser.get(confirmation_url)
+        btn = self.get_button_by_xpath('//button[@type="submit"]')
+        btn.click()
+        self.assertIn('/account/profile/', self.browser.current_url)
 
-        # At the top, there is a green success message stating that his email
-        # address has been successfully confirmed and there is a "(Confirmed)"
+        # There is a message saying that his email address has been successfully
+        # confirmed and there is a "(Confirmed)"
         # green text next to his email address on his profile page.
-        self.fail('Finish the test!')
+        self.fail('Finish the test')
 
         ## The "unconfirmed email address" won't change much, except when he
         ## tries to proceed with the order form the cart,the user will be
         ## presented with a page asking him to confim his email address or,
         ## in case he's not logged in, to create an account.
+
+        # He clicks on "Logout" link , which takes him to a new page, where 
+        # he has to confirm his logout by clicking on a button.
+
+        
+        # He then tries to log in again using the same credetntials he used to 
+        # register his account.
+
+        # He knows he's logged in, because he was notified about with a 
+        # message stating that and he also notices that the "Login/Register"
+        # link is gone, instead he sees "Profile" and "Logout" links.
+        with self.assertRaises(TimeoutException):
+            self.get_element_by_id('login-reg-modal-btn')
+
+        self.assertTrue(self.is_element_present(By.ID, 'profile-header-menu'))
+        self.assertTrue(self.is_element_present(By.ID, 'logout-header-menu'))
+
+        self.fail('Finish the test!')
 
         # He goes to his profile, by clicking on the "Profile" link at the top, 
         # where he's presented with his current profile
