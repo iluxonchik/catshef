@@ -16,6 +16,17 @@ class AccountURLsTestCase(TestCase):
         self.assertEqual(root.func, views.profile)
         self.assertEqual(root.func.__name__, 'profile')
 
+    def test_profile_edit_url(self):
+        pedit = resolve(BASE_URL + 'profile/')
+        self.assertEqual(pedit.view_name,
+            'edit_profile')
+        self.assertEqual(pedit.func.__name__, 'edit_profile')
+
+class AllauthURLsTestCase(TestCase):
+    """
+    Test that allauths urls are working as expected.
+    """
+
     def test_login_url(self):
         res = resolve(BASE_URL + 'login/')
         self.assertEqual(res.url_name, 'account_login')
