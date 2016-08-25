@@ -1,0 +1,22 @@
+{% extends "account/profile/settings.html" %}
+
+{% load i18n %}
+
+{% block title %} {{ site_name }}: Edit Profile {% endblock title %}
+
+{% block account_nav_edit_profile %}is-active{% endblock %}
+
+{% block tab_content %}
+
+{% endblock %}
+
+{% block domready %}
+  $(function(){
+    $("button[name='action_remove']").click(function(){
+      if (confirm("{% trans 'Do you really want to remove the selected e-mail address?' %}")) {
+        return true;
+      }
+      return false;
+    });
+  });
+{% endblock %}

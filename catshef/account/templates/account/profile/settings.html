@@ -1,0 +1,62 @@
+{% extends "products/base.html" %}
+{% load i18n %}
+
+{% block content %}
+
+<div class="container">
+    <h1 class="title-h1">{% trans 'My Account' %}</h1>
+
+    <div class="mdl-tabs is-upgraded">
+      <div class="mdl-tabs__tab-bar">
+          <a onclick="window.location = &quot;{% url 'edit_profile' %}&quot;;" href="{% url 'edit_profile' %}" 
+          class="mdl-tabs__tab {% block account_nav_profile %}{% endblock %}">{% trans "Profile" %}</a>
+          <a href="{% url 'account_email' %}" 
+          class="mdl-tabs__tab {% block account_nav_email %}{% endblock %}">E-mail Addresses</a>
+          <a href="{% url 'account_change_password' %}" 
+          class="mdl-tabs__tab {% block account_nav_change_password %}{% endblock %}">{% trans "Change Password" %}</a> 
+          {% url 'socialaccount_connections' as connections_url %}
+          {% if connections_url %}         
+              <a href="{{ connections_url }}" 
+              class="mdl-tabs__tab {% block account_nav_socialaccount_connections %}{% endblock %}">{% trans "Connected Accounts" %}</a>
+           {% else %}
+            No connections url
+           {% endif %}
+
+      </div>
+
+      <div class="mdl-tabs__panel is-active" id="active-settings-tab">
+          {% block tab_content %}
+              
+          {% endblock tab_content %}
+      </div>
+
+</div>
+
+<!--
+<ul class="nav nav-tabs">
+    <li class="{% block account_nav_profile2 %}{% endblock %}">
+        <a href="{% url 'account_email' %}">{% trans 'Profile' %}</a>
+    </li>
+    <li class="{% block account_nav_email2 %}{% endblock %}">
+        <a href="{% url 'account_email' %}">{% trans 'E-mail Addresses' %}</a>
+    </li>
+    <li class="{% block account_nav_change_password2 %}{% endblock %}">
+        <a href="{% url 'account_change_password' %}">{% trans 'Change Password' %}</a>
+    </li>
+    {% url 'socialaccount_connections' as connections_url %}
+    {% if connections_url %}
+    <li class="{% block account_nav_socialaccount_connections2 %}{% endblock %}">
+        <a href="{{ connections_url}}">{% trans 'Connected Accounts' %}</a>
+    </li>
+    {% else %}
+    <li>No connections url</li>
+    {% endif %}
+</ul>
+-->
+
+{% block account_content %}
+{% endblock %}
+
+</div>
+
+{% endblock %}
