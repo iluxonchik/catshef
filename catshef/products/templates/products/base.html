@@ -470,8 +470,22 @@
 
 {% if snackbar_js %}
     <script type="text/javascript">
-        $(document).ready(function () { 
-            {{ snackbar_js|safe }}
+        /* A hack to make snackbars work properly:
+            Since material-design-lite changes the snackbar div dynamically,
+            we gotta make sure that it's loaded before attempting to
+            display the snackbar. 
+        */
+        $(document).ready(function () {
+            if (!$('div[data-upgraded=",MaterialSnackbar"]').length) {
+              var checkExist = setInterval(function() {
+                   if ($('div[data-upgraded=",MaterialSnackbar"]').length) {
+                      {{ snackbar_js|safe }}
+                      clearInterval(checkExist);
+                   }
+                }, 5); // check every 5ms
+            } else {
+                {{ snackbar_js|safe }}
+            }
         });
     </script>
 {% endif %}
