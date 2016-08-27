@@ -178,6 +178,11 @@ INSTALLED_APPS += [
     'phonenumber_field',
 ]
 
+# django-boostrap3 settings
+INSTALLED_APPS += [
+    'bootstrap3',
+]
+
 # convert messages to SnackBars(toasts, actually)
 
 MIDDLEWARE_CLASSES += [

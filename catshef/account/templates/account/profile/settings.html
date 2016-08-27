@@ -10,7 +10,7 @@
   <ul class="nav nav-tabs" role="tablist">
     <li role="presentation" class="{% block account_nav_profile %}{% endblock %}"><a href="{% url 'edit_profile' %}" aria-controls="home" role="tab" data-toggle="tab">{% trans "Profile" %}</a></li>
     <li role="presentation" class="{% block account_nav_email %}{% endblock %}"><a href="{% url 'account_email' %}" aria-controls="profile" role="tab" data-toggle="tab">{% trans "E-mail Addresses" %}</a></li>
-    <li role="presentation" class="{% block account_nav_change_password %}{% endblock %}"><a href="{% url 'account_change_password' %}" aria-controls="messages" role="tab" data-toggle="tab">{% trans "Change Password" %}</a></li>
+    <li role="presentation" class="{% block account_nav_change_password %}{% endblock %}"><a href="{% url 'account_change_password' %}" aria-controls="messages" role="tab" >{% trans "Change Password" %}</a></li>
     {% url 'socialaccount_connections' as connections_url %}
           {% if connections_url %}                    
             <li role="presentation" class="{% block account_nav_connections %}{% endblock %}"><a href="{{ connections_url }}" aria-controls="settings" role="tab" data-toggle="tab">{% trans "Connected Accounts" %}</a></li>
