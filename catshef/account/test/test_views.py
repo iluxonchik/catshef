@@ -1,4 +1,5 @@
 from account import views
+from account.models import Profile
 
 from django.contrib.auth.models import User, AnonymousUser
 
@@ -31,8 +32,9 @@ class AccountBaseTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
         super(AccountBaseTestCase, cls).setUpTestData()
-        User.objects.create_user(username=AccountBaseTestCase.USERNAME,
+        u = User.objects.create_user(username=AccountBaseTestCase.USERNAME,
             email='thegame@dr.dre', password=AccountBaseTestCase.PASSWORD)
+        Profile.objects.create(name='Jayceon', user=u)
 
 
 class ProfileViewTestCase(AccountBaseTestCase):
@@ -47,8 +49,8 @@ class ProfileViewTestCase(AccountBaseTestCase):
         self._login_user()
         request = self._setup_request(BASE_URL)
         
-        with self.assertTemplateUsed('account/profile.html'):
-            response = views.profile(request)
+        with self.assertTemplateUsed('account/profile/profile.html'):
+            response = self.client.get(BASE_URL)
 
         self.assertEqual(response.status_code, 200)
 
@@ -65,8 +67,8 @@ class ProfileEditViewTestCase(AccountBaseTestCase):
         self._login_user()
         request = self._setup_request(BASE_URL + 'profile/')
         
-        with self.assertTemplateUsed('account/edit_profile.html'):
-            response = views.profile(request)
+        with self.assertTemplateUsed('account/profile/edit_profile.html'):
+            response = self.client.get(BASE_URL + 'profile/')
 
         self.assertEqual(response.status_code, 200)
     
