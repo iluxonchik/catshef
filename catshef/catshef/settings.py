@@ -164,7 +164,7 @@ SITE_ID = 1
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
 # Where to redirect authenticated users when they access login/signup pages 
-LOGIN_REDIRECT_URL = '/account/profile/'  # TODO: decide on url
+LOGIN_REDIRECT_URL = '/account/'
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'http'
 ACCOUNT_USERNAME_REQUIRED = False
 # TODO: return something more appropriate, like the User's name
