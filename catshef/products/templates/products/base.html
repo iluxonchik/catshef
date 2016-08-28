@@ -154,7 +154,8 @@
                 </ul>   
             </div>
 
-
+            {% block nav %}
+                
             <div class="nav-top">
                 <nav class="navbar navbar-default">
 
@@ -312,6 +313,7 @@
                 </div>
                 <div class="clearfix"></div>
             </div>
+            {% endblock nav %}
 
         </div>          
     </div>
@@ -473,7 +475,7 @@
         /* A hack to make snackbars work properly:
             Since material-design-lite changes the snackbar div dynamically,
             we gotta make sure that it's loaded before attempting to
-            display the snackbar. 
+            display the snackbar.    
         */
         $(document).ready(function () {
             if (!$('div[data-upgraded=",MaterialSnackbar"]').length) {

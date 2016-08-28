@@ -3199,3 +3199,7 @@ div.add-new-email {
   margin-top: 1%;
   margin-bottom: 1%;
 }
+
+strong.larger {
+  font-size: larger;
+}
