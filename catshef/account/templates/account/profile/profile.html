@@ -1,6 +1,58 @@
 {% extends "products/base.html" %}
+{% load static %}
 {% load i18n %}
 
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="{% static "css/profile.css" %}">
+{% endblock head %}
+
 {% block content %}
-    
+    <div class="container">
+      <div class="row">
+      <div class="col-md-5  toppad  pull-right col-md-offset-3 ">
+      </div>
+        <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6 col-xs-offset-0 col-sm-offset-0 col-md-offset-3 col-lg-offset-3 toppad" >
+   
+   
+          <div class="panel panel-info">
+            <div class="panel-heading">
+              <h3 class="panel-title">{{ user.profile.name }}</h3>
+            </div>
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-md-3 col-lg-3 " align="center"> <img alt="User Pic" src="http://babyinfoforyou.com/wp-content/uploads/2014/10/avatar-300x300.png" class="img-circle img-responsive"> </div>
+                
+                <div class=" col-md-9 col-lg-9 "> 
+                  <table class="table table-user-information">
+                    <tbody>
+                      <tr>
+                        <td>Primary Email:</td>
+                        <td>{{ user.email }} 
+        {% if request.user.profile.is_verified %}
+            <span class="label label-success">Verified</span>
+        {% else %}
+            <span class="label label-warning">Unverified</span>
+
+        {% endif %}</td>
+                      </tr>
+                      <tr>
+                        <td>Phone Number:</td>
+                        <td>{% if user.profile.phone %}
+            {{ user.profile.phone }}
+            {% else %}
+            <a href=" {% url 'edit_profile' %}">Add a phone number</a>
+        {% endif %}</td>
+                      </tr>  
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <a href="{% url 'edit_profile' %}" class="btn btn-warning edit-btn"><i class="glyphicon glyphicon-edit"></i> Edit Profile</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+</div>
 {% endblock content %}

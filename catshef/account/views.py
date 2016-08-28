@@ -8,7 +8,7 @@ from account.forms import ProfileEditForm
 
 @login_required
 def profile(request):
-    return HttpResponse('')
+    return render(request, 'account/profile/profile.html')
 
 @login_required
 def edit_profile(request):
