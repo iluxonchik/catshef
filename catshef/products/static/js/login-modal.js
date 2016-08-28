@@ -154,7 +154,7 @@ function registerAjax() {
 }
 
 function logoutAjax() {
-    $.post('account/logout/').done(function(data, textStatus, jqXHR) {
+    $.post('/account/logout/').done(function(data, textStatus, jqXHR) {
         if (!SAME_URL_AFTER_LOGOUT) {
             if (data['location']) {
                 window.location.href = data['location']
