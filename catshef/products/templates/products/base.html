@@ -137,7 +137,7 @@
                     <li><a href="about.html" ><i class="fa fa-file-text-o" aria-hidden="true"></i>Order History</a></li>
                     <li><a href="shipping.html" ><i class="fa fa-ship" aria-hidden="true"></i>Shipping</a></li>
                     {% if request.user.is_authenticated %}
-                        <li><a id="profile-header-menu" href="/account/profile/"><i class="fa fa-user" aria-hidden="true"></i>Profile</a></li>                       
+                        <li><a id="profile-header-menu" href="{% url 'profile' %}"><i class="fa fa-user" aria-hidden="true"></i>Profile</a></li>                       
                         <li><a id="logout-header-menu" href="javascript:void(0);" onclick="logoutAjax();"><i class="fa fa-sign-out" aria-hidden="true"></i>Logout</a></li>
                     {% else %}
                         <li><a id="login-reg-modal-btn" data-toggle="modal" href="javascript:void(0);" onclick="openLoginModal();"><i class="fa fa-user" aria-hidden="true"></i>Login/Register</a></li>

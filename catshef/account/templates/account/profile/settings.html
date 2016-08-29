@@ -1,6 +1,7 @@
 {% extends "products/base.html" %}
 {% load i18n %}
 
+{% block nav %}{% endblock nav %} {# Hide top menu #}
 {% block content %}
 
 <div class="container">
@@ -14,9 +15,7 @@
     {% url 'socialaccount_connections' as connections_url %}
           {% if connections_url %}                    
             <li role="presentation" class="{% block account_nav_connections %}{% endblock %}"><a href="{{ connections_url }}" aria-controls="settings" role="tab">{% trans "Connected Accounts" %}</a></li>
-           {% else %}
-            No connections url
-           {% endif %}
+          {% endif %}
   </ul>
 
   <!-- Tab panes -->
