@@ -1,0 +1,23 @@
+{% extends "account/profile/settings.html" %}
+{% load bootstrap3 %}
+
+{% load i18n %}
+
+{% block title %} {{ site_name }}: Edit Profile {% endblock title %}
+
+{% block account_nav_profile %}active{% endblock %}
+
+{% block tab_content %}
+<div>
+  
+
+    <form method="POST" action="">
+        {% csrf_token %}
+        {% bootstrap_form profile_form %}
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit" name="action">{% trans "Update Profile" %}</button>
+          <button class="btn btn-danger" href="{% url 'profile' %}" name="cancel">{% trans "Cancel" %}</button>
+        </div>
+    </form>
+    </div>
+{% endblock tab_content %}

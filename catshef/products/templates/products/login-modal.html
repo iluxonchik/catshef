@@ -26,47 +26,71 @@
             </div>
             <div class="error"></div>
             <div class="form loginBox">
-              <form method="post" action="/login" accept-charset="UTF-8">
+
+              <form id="modal-login-form" method="post" action="" accept-charset="UTF-8">
+
+              {% for hidden in login_form.hidden_fields %}
+                  {{ hidden }}
+              {% endfor %}
+
+              {% with field=login_form.login|add_class:'form-control' %}
+                {{ field|add_placeholder:'Email' }}
+              {% endwith %}
+
+              {% with field=login_form.password|add_class:'form-control' %}
+                {{ field|add_placeholder:'Password' }}
+              {% endwith %}
+
+              <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="id_remember">
+                   <span class="mdl-checkbox__label">Remember me?</span>
+                   {{ login_form.remember|add_class:'mdl-checkbox__input' }}
+              </label>
+
+              <!--
                 <input id="id_email2" class="form-control" type="text" placeholder="Email" name="email">
                 <input id="id_password" class="form-control" type="password" placeholder="Password" name="password">
-                <input class="btn btn-default btn-login" type="button" value="Login" onclick="loginAjax()">
+              -->
+                <input class="btn btn-default btn-login" type="button" value="Sign In" onclick="loginAjax()">
               </form>
+
             </div>
           </div>
         </div>
         <div class="box">
           <div class="content registerBox" style="display:none;">
            <div class="form">
-            <form id="modal-login-form" method="post" html="{:multipart=>true}" data-remote="true" action="/register" accept-charset="UTF-8">              
+            <form id="modal-register-form" method="post" html="{:multipart=>true}" data-remote="true" action="" accept-charset="UTF-8">              
               
-              {% for hidden in form.hidden_fields %}
+              {% for hidden in reg_form.hidden_fields %}
                   {{ hidden }}
               {% endfor %}
 
               <div class="has-error" id="name-error-div"></div>
-                {% with field=form.name|add_class:'form-control' %}
+                {% with field=reg_form.name|add_class:'form-control' %}
                   {{ field|add_placeholder:'Name' }}
                 {% endwith %}
 
               <div class="has-error" id="email-error-div"></div>
-                {% with field=form.email|add_class:'form-control' %}
+                {% with field=reg_form.email|add_class:'form-control' %}
                   {{ field|add_placeholder:'Email' }}
                 {% endwith %}
 
               <div class="has-error" id="phone-error-div"></div>
-                {% with field=form.phone|add_class:'form-control' %}
+                {% with field=reg_form.phone|add_class:'form-control' %}
                   {{ field|add_placeholder:'Phone Number' }}
                 {% endwith %}
 
               <div class="has-error" id="password1-error-div"></div>
-                {% with field=form.password1|add_class:'form-control' %}
+                {% with field=reg_form.password1|add_class:'form-control' %}
                   {{ field|add_placeholder:'Password' }}
                 {% endwith %}
 
               <div class="has-error" id="password2-error-div"></div>
-                {% with field=form.password2|add_class:'form-control' %}
+                {% with field=reg_form.password2|add_class:'form-control' %}
                   {{ field|add_placeholder:'Repeat Password' }}
                 {% endwith %}
+
+              {% csrf_token %}
 
               <input class="btn btn-default btn-register" type="submit" value="Create account" name="commit">
             <!--
@@ -101,7 +125,13 @@
 <script type="text/javascript" src="{% static "js/login-modal.js" %}"></script>
 
 <script type="text/javascript">
-  $('#modal-login-form').submit(function(e) {
+
+    $('#modal-login-form').submit(function(e) {
+      loginAjax();
+      e.preventDefault();
+    });
+
+  $('#modal-register-form').submit(function(e) {
     registerAjax();
     e.preventDefault();
   });

@@ -78,6 +78,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'products.context_processors.site_name',
                 'products.context_processors.login_modal_form',
+                'account.context_processors.snackbar_data',
             ],
         },
     },
@@ -163,7 +164,7 @@ SITE_ID = 1
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
 # Where to redirect authenticated users when they access login/signup pages 
-LOGIN_REDIRECT_URL = '/account/profile/'  # TODO: decide on url
+LOGIN_REDIRECT_URL = '/account/'
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'http'
 ACCOUNT_USERNAME_REQUIRED = False
 # TODO: return something more appropriate, like the User's name
@@ -175,6 +176,17 @@ ACCOUNT_USER_DISPLAY = lambda u: u.email
 # django-phonenumber-field settings
 INSTALLED_APPS += [
     'phonenumber_field',
+]
+
+# django-boostrap3 settings
+INSTALLED_APPS += [
+    'bootstrap3',
+]
+
+# convert messages to SnackBars(toasts, actually)
+
+MIDDLEWARE_CLASSES += [
+    'catshef.middleware.mtosmiddleware.MessageToSnackBarMiddleware',
 ]
 
 """

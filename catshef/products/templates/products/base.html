@@ -39,18 +39,25 @@
     <script src="{% static "owl-carousel/owl.carousel.js" %}"></script>
     <!-- //Owl Carousel Setup -->
 
-
-
     <!-- AJAX Setup -->
     <script type="text/javascript">
+        function getCookie(name) {
+              var value = "; " + document.cookie;
+              var parts = value.split("; " + name + "=");
+              if (parts.length == 2) return parts.pop().split(";").shift();
+        }
+
         var csrftoken = $.cookie('csrftoken');
+        //var csrftoken = getCookie('csrftoken');
         function csrfSafeMethod(method) {
         // these methods do not require CSRF protection
         return(/^(GET|HEAD|OPTIONS|TRACE)$/.test(method))
     }
+
     $.ajaxSetup({
         beforeSend: function(xhr, settings) {
             if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                console.log('Setting cookie');
                 xhr.setRequestHeader('X-CSRFToken', csrftoken);
             }
         }
@@ -74,6 +81,13 @@
         {% endblock domready %}
     });
 </script>
+
+<!-- Material Design Lite -->
+<link href="{% static "css/material.min.css" %}" rel="stylesheet"> 
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script defer src="https://code.getmdl.io/1.2.0/material.min.js"></script>
+<!-- //Material Design Lite -->
+
 <!-- start-smoth-scrolling -->
 <link href="{% static "css/font-awesome.css" %}" rel="stylesheet"> 
 <link href='{% static "//fonts.googleapis.com/css?family=Montserrat:400,700" %}' rel='stylesheet' type='text/css'>
@@ -120,9 +134,14 @@
             <div class="head-t">
                 <ul class="card">
                     <li><a href="wishlist.html" ><i class="fa fa-heart" aria-hidden="true"></i>Wishlist</a></li>
-                    <li><a id="login-reg-modal-btn" data-toggle="modal" href="javascript:void(0)" onclick="openLoginModal();"><i class="fa fa-user" aria-hidden="true"></i>Login/Register</a></li>
                     <li><a href="about.html" ><i class="fa fa-file-text-o" aria-hidden="true"></i>Order History</a></li>
                     <li><a href="shipping.html" ><i class="fa fa-ship" aria-hidden="true"></i>Shipping</a></li>
+                    {% if request.user.is_authenticated %}
+                        <li><a id="profile-header-menu" href="{% url 'profile' %}"><i class="fa fa-user" aria-hidden="true"></i>Profile</a></li>                       
+                        <li><a id="logout-header-menu" href="javascript:void(0);" onclick="logoutAjax();"><i class="fa fa-sign-out" aria-hidden="true"></i>Logout</a></li>
+                    {% else %}
+                        <li><a id="login-reg-modal-btn" data-toggle="modal" href="javascript:void(0);" onclick="openLoginModal();"><i class="fa fa-user" aria-hidden="true"></i>Login/Register</a></li>
+                    {% endif %}
                 </ul>   
             </div>
             
@@ -135,7 +154,8 @@
                 </ul>   
             </div>
 
-
+            {% block nav %}
+                
             <div class="nav-top">
                 <nav class="navbar navbar-default">
 
@@ -293,6 +313,7 @@
                 </div>
                 <div class="clearfix"></div>
             </div>
+            {% endblock nav %}
 
         </div>          
     </div>
@@ -309,8 +330,7 @@
     <br />
     <br />
 
-
-{% include "products/login-modal.html" with form=modal_signup_form %}
+{% include "products/login-modal.html" with reg_form=modal_signup_form login_form=modal_login_form %}
 
 <!--footer-->
 <div class="footer">
@@ -444,6 +464,34 @@
 
   });
   </script>
+
+<div aria-live="assertive" aria-atomic="true" aria-relevant="text" class="mdl-snackbar mdl-js-snackbar">
+    <div class="mdl-snackbar__text"></div>
+    <button type="button" class="mdl-snackbar__action"></button>
+</div>
+
+{% if snackbar_js %}
+    <script type="text/javascript">
+        /* A hack to make snackbars work properly:
+            Since material-design-lite changes the snackbar div dynamically,
+            we gotta make sure that it's loaded before attempting to
+            display the snackbar.    
+        */
+        $(document).ready(function () {
+            if (!$('div[data-upgraded=",MaterialSnackbar"]').length) {
+              var checkExist = setInterval(function() {
+                   if ($('div[data-upgraded=",MaterialSnackbar"]').length) {
+                      {{ snackbar_js|safe }}
+                      clearInterval(checkExist);
+                   }
+                }, 5); // check every 5ms
+            } else {
+                {{ snackbar_js|safe }}
+            }
+        });
+    </script>
+{% endif %}
+
 {% block bodyend %}
 {% endblock bodyend %}
 </body>

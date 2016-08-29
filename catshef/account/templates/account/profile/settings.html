@@ -1,0 +1,38 @@
+{% extends "products/base.html" %}
+{% load i18n %}
+
+{% block nav %}{% endblock nav %} {# Hide top menu #}
+{% block content %}
+
+<div class="container">
+    <h1 class="title-h1">{% trans 'My Account' %}</h1>
+
+    <!-- Nav tabs -->
+  <ul class="nav nav-tabs" role="tablist">
+    <li role="presentation" class="{% block account_nav_profile %}{% endblock %}"><a href="{% url 'edit_profile' %}" aria-controls="home" role="tab">{% trans "Profile" %}</a></li>
+    <li role="presentation" class="{% block account_nav_email %}{% endblock %}"><a href="{% url 'account_email' %}" aria-controls="profile" role="tab">{% trans "E-mail Addresses" %}</a></li>
+    <li role="presentation" class="{% block account_nav_change_password %}{% endblock %}"><a href="{% url 'account_change_password' %}" aria-controls="messages" role="tab">{% trans "Change Password" %}</a></li>
+    {% url 'socialaccount_connections' as connections_url %}
+          {% if connections_url %}                    
+            <li role="presentation" class="{% block account_nav_connections %}{% endblock %}"><a href="{{ connections_url }}" aria-controls="settings" role="tab">{% trans "Connected Accounts" %}</a></li>
+          {% endif %}
+  </ul>
+
+  <!-- Tab panes -->
+  <div class="tab-content">
+    <div role="tabpanel" class="tab-pane active" id="settings_active_tab">
+          {% block tab_content %}
+              
+          {% endblock tab_content %}
+    </div>
+  </div>
+
+
+</div>
+
+{% block account_content %}
+{% endblock %}
+
+</div>
+
+{% endblock %}

@@ -12,3 +12,15 @@ class SignUpForm(forms.ModelForm):
 
     def signup(self, request, user):
         user.profile = self.instance
+        user.save()
+        self.instance.save()
+
+class ProfileEditForm(forms.ModelForm):
+    """
+    Form for editing a Profile instance.
+    """
+    # NOTE: for now this is a duplicate of SignUpForm, but later on
+    # some ohter custumizations will be added.
+    class Meta:
+        model = Profile
+        fields = ['name', 'phone']
