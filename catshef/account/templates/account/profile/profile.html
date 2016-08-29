@@ -1,7 +1,9 @@
 {% extends "products/base.html" %}
 {% load static %}
 {% load i18n %}
+{% load socialaccount account %}
 
+{% block nav %}{% endblock nav %} {# Hide top menu #}
 {% block title %}{{ site_name }}: My Profile{% endblock title %}
 
 {% block head %}
@@ -49,7 +51,13 @@
                   </table>
                 </div>
               </div>
-              <a href="{% url 'edit_profile' %}" class="btn btn-warning edit-btn"><i class="glyphicon glyphicon-edit"></i> Edit Profile</a>
+              <a href="{% url 'edit_profile' %}" class="btn btn-warning edit-btn"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Edit Profile</a>
+              <a href="{% url 'account_email' %}" class="btn btn-warning edit-btn"><i class="fa fa-envelope-o" aria-hidden="true"></i> Email Settings</a>
+              <a href="{% url 'account_change_password' %}" class="btn btn-warning edit-btn"><i class="fa fa-key" aria-hidden="true"></i> Change Password</a>
+              {% url 'socialaccount_connections' as connections_url %}
+                  {% if connections_url %}                    
+                    <a href="{{ connections_url }}" class="btn btn-warning edit-btn"><i class="fa fa-facebook" aria-hidden="true"></i> Manage Connected Accounts</a>
+                  {% endif %}
             </div>
           </div>
         </div>
