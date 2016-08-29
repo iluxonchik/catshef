@@ -25,7 +25,7 @@ class UserAccountsTestCase(LiveServerTestCase):
     def setUp(self):
         self.browser = webdriver.Firefox()
         self.browser.implicitly_wait(2)
-        self.browser.wait = WebDriverWait(self.browser, 10)
+        self.browser.wait = WebDriverWait(self.browser, 5)
         self.__setup_database()
 
     def tearDown(self):
@@ -55,8 +55,49 @@ class UserAccountsTestCase(LiveServerTestCase):
             self.browser.wait.until(
                 EC.presence_of_element_located((by, selector)))
             return True
-        except NoSuchElementException:
+        except (NoSuchElementException, TimeoutException):
             return False
+
+    def _assert_is_logged_in_menu(self):
+        """
+        Tests whether the menu displays the correct info when the user is logged
+        in.
+
+        Assert that:
+            * There is a "Profile" button
+            * There is a "Logout" button
+            * There is no "Login/Register" button
+        """
+        self.assertTrue(self.is_element_present(By.ID, 'profile-header-menu'))
+        self.assertTrue(self.is_element_present(By.ID, 'logout-header-menu'))
+        self.assertFalse(self.is_element_present(By.ID, 'login-reg-modal-btn'))
+
+
+    def _assert_is_logged_out_menu(self):
+        """
+        Tests whether the menu displays the correct info when the user is logged
+        out.
+
+        Assert that:
+            * There is a "Login/Register" button
+            * There is no "Profile" button
+            * There is no"Logout" button
+        """
+        self.assertFalse(self.is_element_present(By.ID, 'profile-header-menu'))
+        self.assertFalse(self.is_element_present(By.ID, 'logout-header-menu'))
+        self.assertTrue(self.is_element_present(By.ID, 'login-reg-modal-btn'))
+
+    def _login_from_modal(self, email, password):
+        login_btn = self.get_element_by_id('login-reg-modal-btn')
+        login_btn.click()
+
+        login_input = self.get_element_by_id('id_login')
+        pwd_input = self.get_element_by_id('id_password')
+        login_btn = self.get_element_by_xpath('//input[@value="Sign In"]')
+
+        login_input.send_keys(email)
+        pwd_input.send_keys(password)
+        login_btn.click()
 
     @override_settings(DEBUG=True)
     def test_basic_user_accounts(self):
@@ -64,6 +105,12 @@ class UserAccountsTestCase(LiveServerTestCase):
         Tests the basic user account functionality. Includes: local site 
         registration, login, profile view and change.
         """
+
+        EMAIL = 'john@rules.com'
+        PWD = 'johnisthebest'
+        NAME = 'John Terry'
+        PHONE = '+351960000000'
+
 
         # It's a sunny Sunday morning and John decides to check out the
         # <SITE_NAME> website and order something to drink. He visits the
@@ -101,19 +148,19 @@ class UserAccountsTestCase(LiveServerTestCase):
 
         ## TODO: adjust element id names, with the ones generated
         name = modal.find_element_by_id('id_name')
-        name.send_keys('John Terry')
+        name.send_keys(NAME)
         
         email = modal.find_element_by_id('id_email')
-        email.send_keys('john@rules.com')
+        email.send_keys(EMAIL)
 
         phone = modal.find_element_by_id('id_phone')
-        phone.send_keys('+351960000000')
+        phone.send_keys(PHONE)
         
         pwd1 = modal.find_element_by_id('id_password1')
-        pwd1.send_keys('johnisthebest')
+        pwd1.send_keys(PWD)
 
         pwd2 = modal.find_element_by_id('id_password2')
-        pwd2.send_keys('johnisthebest')
+        pwd2.send_keys(PWD)
 
         prev_url = self.browser.current_url
         # After that, he clicks on the 'Create Account' button at the bottom.
@@ -126,14 +173,11 @@ class UserAccountsTestCase(LiveServerTestCase):
         # asking him to confirm his email address.
         self.assertEqual(self.browser.current_url, prev_url)
         ## The message will be a snackbar
-
+        self.assertIn('Registration successful, please confirm your ' 
+            'email address', self.browser.page_source)
         # He notices that there is no more "Login/Register" links at the top,
         # instead, he finds two new links at the top: "Profile" and "Logout".
-        with self.assertRaises(TimeoutException):
-            self.get_element_by_id('login-reg-modal-btn')
-
-        self.assertTrue(self.is_element_present(By.ID, 'profile-header-menu'))
-        self.assertTrue(self.is_element_present(By.ID, 'logout-header-menu'))
+        self._assert_is_logged_in_menu()
 
         # He notices that he has recieved a new email with a link to confirm his
         # email address, he clicks on that link, after which he's taken
@@ -143,75 +187,195 @@ class UserAccountsTestCase(LiveServerTestCase):
         self.assertEqual(len(confirmation_url), 1, 'Confirmation email message'
             ' does not have the expected confirmation url.')
         self.browser.get(confirmation_url)
+        mail.outbox = []  # clear the outbox
         btn = self.get_button_by_xpath('//button[@type="submit"]')
         btn.click()
-        self.assertIn('/account/profile/', self.browser.current_url)
-
+        self.assertIn('/account/', self.browser.current_url)
+        
         # There is a message saying that his email address has been successfully
-        # confirmed and there is a "(Confirmed)"
+        # confirmed and there is a "Verfified"
         # green text next to his email address on his profile page.
-        self.fail('Finish the test')
+        self.assertIn('You have confirmed john@rules.com', 
+            self.browser.page_source)
+        self.assertInHTML('<span class="label label-success">Verified</span>',
+            self.browser.page_source)
 
         ## The "unconfirmed email address" won't change much, except when he
         ## tries to proceed with the order form the cart,the user will be
         ## presented with a page asking him to confim his email address or,
         ## in case he's not logged in, to create an account.
 
-        # He clicks on "Logout" link , which takes him to a new page, where 
-        # he has to confirm his logout by clicking on a button.
+        # He clicks on "Logout" link , which logs him out
+        logout_btn = self.get_element_by_id('logout-header-menu')
+        logout_btn.click()
 
+        # He notices that is now a "Login/Register" button, the "Logout"
+        # is gone and there is no sign of "Profile" button
+        self._assert_is_logged_out_menu()
+
+        ## user will be redirected to the login page after the previous logout
+        ## since we want to login via modal and THERE IS AN ID clash,
+        ## buggy behaviour from testig might occur
+        ## TODO: fix id clash (issue #79)
+        self.browser.get(self.live_server_url + '/')
         
         # He then tries to log in again using the same credetntials he used to 
-        # register his account.
+        # register his account. To do that, he clicks on the "Login/Register"
+        # button in the menu and inputs his credentials.
+        self._login_from_modal(EMAIL, PWD)
 
         # He knows he's logged in, because he was notified about with a 
         # message stating that and he also notices that the "Login/Register"
         # link is gone, instead he sees "Profile" and "Logout" links.
-        with self.assertRaises(TimeoutException):
-            self.get_element_by_id('login-reg-modal-btn')
+        self._assert_is_logged_in_menu()
 
-        self.assertTrue(self.is_element_present(By.ID, 'profile-header-menu'))
-        self.assertTrue(self.is_element_present(By.ID, 'logout-header-menu'))
+        # He goes to his profile, by clicking on the "Profile" link at the top
+        profile_link = self.get_element_by_id('profile-header-menu') 
+        profile_link.click()
+        self.assertIn(reverse('profile'), self.browser.current_url)
 
-        self.fail('Finish the test!')
-
-        # He goes to his profile, by clicking on the "Profile" link at the top, 
         # where he's presented with his current profile
-        # information (name, email), he clicks on "Edit" and sees that he can:
-        # (##TODO) specify some additonal info
-        # or update his existing info. He decides to update his email address
-        # to 'john_terry@rules.com', leaving the other fields inact.
-        # He edits his existing email address to the desired one and clicks on
-        # "Update" button at the bottom of the page. He also notices that there
-        # is a "Cancel" button.
+        # information (name,phone number, priamry email)
+        prof_box = self.get_element_by_xpath('//div[@class="panel panel-info"]')
+        prof_box = prof_box.get_attribute('innerHTML')
+        self.assertIn(NAME, prof_box)
+        self.assertIn(EMAIL, prof_box)
+        self.assertIn(PHONE, prof_box)
 
-        # After clicking on the "Update" button, he's taken to the "Profile"
+        # he clicks on "Edit Profle" and sees that he can update his existing 
+        # info
+        edit_profile_link = self.browser.find_element_by_xpath(
+            '//a[contains(text(), "Edit Profile")]')
+        edit_profile_link.click()
+        self.assertIn(reverse('edit_profile'), self.browser.current_url)
+
+        # He notices that the "Name" box contains his current name, while
+        # the Phone box his current phone number.
+        # He decides to update his name to "John George Terry", 
+        # leaving the other fields inact.
+        new_name = "John George Terry"
+
+        name = self.get_element_by_id('id_name')
+        self.assertEquals(name.get_attribute('value'), NAME)
+        
+        phone = self.get_element_by_id('id_phone')
+        self.assertEquals(phone.get_attribute('value'), PHONE)
+
+        name.clear()
+        name.send_keys(new_name)
+
+        # After clicking on the "Update Profile" button, he's taken to the "Profile"
         # page (from where he's clicked on "Edit") and notices that the
-        # presented email address has changed. He notices that his new email
-        # address is marked as "unconfirmed" and there is a
-        # "Resend Activation Email" link next to it. 
-        # He also notices that there is a success message at the top
-        # that asks him to confirm his email address.
+        # presented name has changed.
+        update_btn = self.get_button_by_xpath(
+            '//button[contains(text(), "Update Profile")]')
+        update_btn.click()
+        self.assertIn(reverse('profile'), self.browser.current_url)
 
-        # He notices that he's recieved a new email, asking him to confirm his
-        # account.
+        prof_box = self.get_element_by_xpath('//div[@class="panel panel-info"]')
+        prof_box = prof_box.get_attribute('innerHTML')
+        self.assertNotIn(NAME, prof_box)
+        self.assertIn(new_name, prof_box)
 
-        # He clicks on the "Resend Activation Email" link
-        # and notices that he's recieved a new email, asking him to confirm his
-        # account.
+        # He clicks on "Edit Profile" once again
+        edit_profile_link = self.browser.find_element_by_xpath(
+            '//a[contains(text(), "Edit Profile")]')
+        edit_profile_link.click()
 
-        # He clicks on the "Logout" link at the top, after which he's redirected
-        # to a page asking him to confirm his logout. He clicks on the "Logout"
-        # button, after which he's redirected to the home page, with a message
-        # at the top stating that he's been logged out successfully.
+        # This time, the "Name" box is pre-filled with his new name
+        name = self.get_element_by_id('id_name')
+        self.assertEquals(name.get_attribute('value'), new_name)
 
-        # He notices that the "Profile" and "Logout" links at the top of the
-        # page are gone, instead the "Login/Register" link is there back again.
+        # He notices that there is a "Cancel" button, so he clicks on it,
+        # which takes him straight to his "Profile" page
+        cancel_btn = self.browser.find_element_by_xpath(
+            '//button[contains(text(), "Cancel")]')
+        cancel_btn.click()
+        self.assertIn(reverse('profile'), self.browser.current_url)
+
+        # The next thing he does is clicks on "Email Settings"
+        email_btn = self.get_element_by_xpath(
+            '//a[contains(text(), "Email Settings")]')
+        email_btn.click()
+
+        # He decides to add a new e-mail address: 'john@terry.com'
+        new_email = 'john@terry.com'
+        email_field = self.get_element_by_id('id_email')
+        email_field.send_keys(new_email)
+
+        add_btn = self.browser.find_element_by_xpath(
+            '//button[contains(text(), "Add Email")]')
+        add_btn.click()
+
+        # He notices that his new email address is marked as "Unverified".
+        ## this is really just a minimal check, but much better than noting 
+        self.assertIn("Unverified", self.browser.page_source)
+        #import pdb; pdb.set_trace()
+
+        # He also notices that there is a  message informing him that
+        # a confirmation email has been sent to his new email address
+        self.assertIn("Confirmation e-mail sent to {}.".format(new_email),
+            self.browser.page_source)
+
+        # He notices that he's recieved a new email, asking him to verify his
+        # new email address
+        self.assertEqual(len(mail.outbox), 1, 'Verification email not sent.')
+        confirmation_url = find_urls(mail.outbox[0].body)
+        self.assertEqual(len(confirmation_url), 1, 'Verification email message'
+            ' does not have the expected url.')
+        mail.outbox = []  # clear the outbox
+
+        # He selects his new email and clicks on the "Resend Activation Email" 
+        # link, after which he notices that he's recieved a new email,
+        # asking him to confirm his account.
+
+        new_mail_radio = self.get_element_by_id('email_radio_2')
+        new_mail_radio.click()
+
+        resend_btn = self.get_element_by_xpath(
+            '//button[contains(text(), "Re-send Verification")]')
+        resend_btn.click()
+
+        self.assertEqual(len(mail.outbox), 1, 'Verification email not sent.')
+        confirmation_url = find_urls(mail.outbox[0].body)
+        self.assertEqual(len(confirmation_url), 1, 'Verification email message'
+            ' does not have the expected url.')
+        mail.outbox = []  # clear the outbox
+
+        # He logs out and logs in with his newly added e-mail account.
+        logout_btn = self.get_element_by_id('logout-header-menu')
+        logout_btn.click()
+        sleep(2)
+        self._assert_is_logged_out_menu()
+
+        self.assertIn(reverse('account_login'), self.browser.current_url,
+            'Not in login url')
+
+        # Let's login from the standalone page
+        login_input = self.get_element_by_id('id_login')
+        pwd_input = self.get_element_by_id('id_password')
+        login_btn = self.get_element_by_xpath('//button[contains(text(),"Sign In")]')
+
+        login_input.send_keys(new_email)
+        pwd_input.send_keys(PWD)
+        login_btn.click()
+
+        self._assert_is_logged_in_menu()
+
+
+        # He clicks on the email verification link and there are no
+        # "Unverified" e-mails in the list anymore.
+        self.browser.get(confirmation_url)
+        btn = self.get_button_by_xpath('//button[@type="submit"]')
+        btn.click()
+        self.assertIn('/account/', self.browser.current_url)
+
+        self.browser.get(reverse('account_email'))
+        self.assertNotIn("Unverified", self.browser.page_source)
 
     def test_facebook_auth(self):
         # TODO
         pass
-
     
     def __setup_database(self):
         pass
