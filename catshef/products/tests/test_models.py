@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 import django.core.exceptions as exceptions
 
 from products.models import (Product, Category, ProductImage, ProductNutrition, 
-    Ingridient)
+    Ingridient, ProductOption, ProductOptionGroup)
 
 class ProductsModelTestCase(TestCase):
 
@@ -435,3 +435,19 @@ class ProductsModelTestCase(TestCase):
                                                 'Chicken Breast')
         self.assertEqual(sim_prod[2], product2, 'Second product is not Protein '
                                                 'Powder')
+
+class ProductOptionTestCase(TestCase):
+
+    def setUp(self):
+        self.po_1 = ProductOption(name='option_1', price=12)
+        self.po_2 = ProductOption(name='option_2', price=3.14159)
+        self.po_3 = ProductOption(name='option_3', price=2.678)
+
+    def test_product_option_basic(self):
+        self.assertEqual(self.po_1.name, 'option_1')
+        self.assertEqual(self.po_1.price, 12)
+
+    def test_product_option_price_rounding(self):
+        self.assertEqual(self.po_2.price, 3.14)
+        self.assertEqual(self.po_3.price, 2.68)
+
