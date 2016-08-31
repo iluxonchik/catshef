@@ -1,5 +1,5 @@
 from catshef.exceptions import ArgumentError
-from products.utils import round_decimal
+from products.utils.conversion import round_decimal
 
 from django.test import SimpleTestCase
 from decimal import Decimal, ROUND_UP
