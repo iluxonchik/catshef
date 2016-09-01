@@ -5,8 +5,10 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
 import django.core.exceptions as exceptions
 
+from decimal import Decimal, ROUND_UP
+
 from products.models import (Product, Category, ProductImage, ProductNutrition, 
-    Ingridient, ProductOption, ProductOptionGroup)
+    Ingridient, ProductOption)
 
 class ProductsModelTestCase(TestCase):
 
@@ -439,15 +441,19 @@ class ProductsModelTestCase(TestCase):
 class ProductOptionTestCase(TestCase):
 
     def setUp(self):
-        self.po_1 = ProductOption(name='option_1', price=12)
-        self.po_2 = ProductOption(name='option_2', price=3.14159)
-        self.po_3 = ProductOption(name='option_3', price=2.678)
+        self.po_1 = ProductOption.objects.create(name='option_1', price=12)
+        self.po_2 = ProductOption.objects.create(name='option_2', price=3.14159)
+        self.po_3 = ProductOption.objects.create(name='option_3', price=2.678)
 
     def test_product_option_basic(self):
         self.assertEqual(self.po_1.name, 'option_1')
         self.assertEqual(self.po_1.price, 12)
 
     def test_product_option_price_rounding(self):
-        self.assertEqual(self.po_2.price, 3.14)
-        self.assertEqual(self.po_3.price, 2.68)
+        self.assertEqual(self.po_2.rounded_price(), 3.14)
+        self.assertEqual(self.po_3.rounded_price(), 2.68)
 
+        self.assertEqual(self.po_2.rounded_price(precision=3), 3.142)
+        self.assertEqual(self.po_2.rounded_price(precision=3, 
+            rounding=ROUND_UP), 3.142)        
+        self.assertEqual(self.po_2.rounded_price(rounding=ROUND_UP), 3.15)
