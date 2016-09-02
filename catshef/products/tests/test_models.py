@@ -443,11 +443,14 @@ class ProductOptionTestCase(TestCase):
     def setUp(self):
         self.po_1 = ProductOption.objects.create(name='option_1', price=12)
         self.po_2 = ProductOption.objects.create(name='option_2', price=3.14159)
-        self.po_3 = ProductOption.objects.create(name='option_3', price=2.678)
+        self.po_3 = ProductOption.objects.create(name='option_3', price=2.678,
+            description='Option 3')
 
     def test_product_option_basic(self):
         self.assertEqual(self.po_1.name, 'option_1')
         self.assertEqual(self.po_1.price, 12)
+        self.assertEqual(self.po_3.description, 'Option 3')
+        self.assertIsNone(self.po_1.description)
 
     def test_product_option_price_rounding(self):
         self.assertEqual(self.po_2.rounded_price(), 3.14)
@@ -465,13 +468,7 @@ class ProductOptionTestCase(TestCase):
 class ProductOptionGroupTestCase(TestCase):
 
     def setUp(self):
-        self._setup_product_options()
         self._setup_product_option_groups()
-
-    def _setup_product_options(self):
-        self.po_1 = ProductOption.objects.create(name='option_1', price=12)
-        self.po_2 = ProductOption.objects.create(name='option_2', price=3.14159)
-        self.po_3 = ProductOption.objects.create(name='option_3', price=2.678)
 
     def _setup_product_option_groups(self):
         self.g1 = ProductOptionGroup.objects.create(name='group_1',
@@ -479,10 +476,48 @@ class ProductOptionGroupTestCase(TestCase):
         self.g2 = ProductOptionGroup.objects.create(name='group_2',
             type=ProductOptionGroup.CHECKBOX)
         self.g3 = ProductOptionGroup.objects.create(name='group_3',
-            type=ProductOptionGroup.DROPDOWN)
+            type=ProductOptionGroup.DROPDOWN, description='Group 3')
 
+    def test_product_option_group_basic(self):
+        self.assertEqual(self.g3.name, 'group_3')
+        self.assertEqual(self.g3.type, ProductOptionGroup.DROPDOWN)
+        self.assertEqual(self.g3.description, 'Group 3')
+        self.assertIsNone(self.g1.description)
+
+
+    def test_types(self):
+        self.assertEqual(self.g1.type, ProductOptionGroup.RADIO)
+        self.assertEqual(self.g2.type, ProductOptionGroup.CHECKBOX)
+        self.assertEqual(self.g3.type, ProductOptionGroup.DROPDOWN)
+
+    def test_str(self):
+        self.assertEqual(self.g1.__str__(), 'group_1')
+
+class ProductOptionProductMembershipTestCase(TestCase):
+
+    def setUp(self):
+        self._setup_product_options()
+        self._setup_product_option_groups()
+        self._setup_memberships()
+
+    def _setup_product_options(self):
+        self.po_1 = ProductOption.objects.create(name='option_1', price=12)
+        self.po_2 = ProductOption.objects.create(name='option_2', price=3.14159)
+        self.po_3 = ProductOption.objects.create(name='option_3',
+            price=2.678, description='Option 3')
+
+    def _setup_product_option_groups(self):
+        self.g1 = ProductOptionGroup.objects.create(name='group_1',
+            type=ProductOptionGroup.RADIO)
+        self.g2 = ProductOptionGroup.objects.create(name='group_2',
+            type=ProductOptionGroup.CHECKBOX)
+        self.g3 = ProductOptionGroup.objects.create(name='group_3',
+            type=ProductOptionGroup.DROPDOWN, description='Group 3')
+
+    def _setup_memberships(self):
         Membership.objects.create(option=self.po_1, group=self.g1)
         Membership.objects.create(option=self.po_2, group=self.g1)
+
 
     def test_from_product_option_retrival(self):
         po = ProductOption.objects.filter(groups__name='group_1')
@@ -494,11 +529,3 @@ class ProductOptionGroupTestCase(TestCase):
         opt = ProductOptionGroup.objects.filter(options__name='option_1')
         self.assertEqual(len(opt), 1)
         self.assertEqual(opt[0], self.g1)
-
-    def test_types(self):
-        self.assertEqual(self.g1.type, ProductOptionGroup.RADIO)
-        self.assertEqual(self.g2.type, ProductOptionGroup.CHECKBOX)
-        self.assertEqual(self.g3.type, ProductOptionGroup.DROPDOWN)
-
-    def test_str(self):
-        self.assertEqual(self.g1.__str__(), 'group_1')

@@ -282,6 +282,7 @@ class ProductOption(models.Model):
 
     name = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=DECIMAL_PLACES)
+    description = models.TextField(blank=True, null=True)
 
     def rounded_price(self, precision=DECIMAL_PLACES,
         rounding=decimal.ROUND_HALF_UP):
@@ -310,6 +311,7 @@ class ProductOptionGroup(models.Model):
     type = models.SmallIntegerField(choices=TYPE_CHOICES)
     options = models.ManyToManyField(ProductOption, through='Membership',
         through_fields=('group', 'option'), related_name='groups')
+    description = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.name
