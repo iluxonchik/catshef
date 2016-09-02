@@ -8,7 +8,7 @@ import django.core.exceptions as exceptions
 from decimal import Decimal, ROUND_UP
 
 from products.models import (Product, Category, ProductImage, ProductNutrition, 
-    Ingridient, ProductOption)
+    Ingridient, ProductOption, ProductOptionGroup, Membership)
 
 class ProductsModelTestCase(TestCase):
 
@@ -457,3 +457,48 @@ class ProductOptionTestCase(TestCase):
         self.assertEqual(self.po_2.rounded_price(precision=3, 
             rounding=ROUND_UP), 3.142)        
         self.assertEqual(self.po_2.rounded_price(rounding=ROUND_UP), 3.15)
+
+    def test_str(self):
+        string_repr = self.po_2.__str__()
+        self.assertEqual(string_repr, 'option_2')
+
+class ProductOptionGroupTestCase(TestCase):
+
+    def setUp(self):
+        self._setup_product_options()
+        self._setup_product_option_groups()
+
+    def _setup_product_options(self):
+        self.po_1 = ProductOption.objects.create(name='option_1', price=12)
+        self.po_2 = ProductOption.objects.create(name='option_2', price=3.14159)
+        self.po_3 = ProductOption.objects.create(name='option_3', price=2.678)
+
+    def _setup_product_option_groups(self):
+        self.g1 = ProductOptionGroup.objects.create(name='group_1',
+            type=ProductOptionGroup.RADIO)
+        self.g2 = ProductOptionGroup.objects.create(name='group_2',
+            type=ProductOptionGroup.CHECKBOX)
+        self.g3 = ProductOptionGroup.objects.create(name='group_3',
+            type=ProductOptionGroup.DROPDOWN)
+
+        Membership.objects.create(option=self.po_1, group=self.g1)
+        Membership.objects.create(option=self.po_2, group=self.g1)
+
+    def test_from_product_option_retrival(self):
+        po = ProductOption.objects.filter(groups__name='group_1')
+        self.assertEqual(len(po), 2)
+        self.assertIn(self.po_1, po)
+        self.assertIn(self.po_2, po)
+
+    def test_from_product_group_retrival(self):
+        opt = ProductOptionGroup.objects.filter(options__name='option_1')
+        self.assertEqual(len(opt), 1)
+        self.assertEqual(opt[0], self.g1)
+
+    def test_types(self):
+        self.assertEqual(self.g1.type, ProductOptionGroup.RADIO)
+        self.assertEqual(self.g2.type, ProductOptionGroup.CHECKBOX)
+        self.assertEqual(self.g3.type, ProductOptionGroup.DROPDOWN)
+
+    def test_str(self):
+        self.assertEqual(self.g1.__str__(), 'group_1')
