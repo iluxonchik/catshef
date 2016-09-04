@@ -1,12 +1,19 @@
 from cart.cart import Cart
-from cart.exceptions import (ProductUnvailableException,
-    NegativeQuantityExcpetion, ProductStockZeroException)
+from cart.exceptions import (ProductUnavailableException,
+    NegativeQuantityException, ProductStockZeroException)
 from products.models import Product, ProductOption
 
-from django.test import SimpleTestCase, RequestFactory
+from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import AnonymousUser
 
-class CartTestCase(SimpleTestCase):
+class SessionDict(dict):
+    """
+    Used to mock the session. It's a dict with an additional 'modified' bool 
+    attribute
+    """
+    modified = False
+
+class CartTestCase(TestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
@@ -15,9 +22,10 @@ class CartTestCase(SimpleTestCase):
         self._setup_products()
         self._setup_product_options()
 
-    def _setup_request(self, path):
+    def _setup_request(self, path='/'):
         request = self.factory.get(path)
-        request.sesion = {}  # mock SESSION
+        # request.session = self.client.session
+        request.session = SessionDict()  # mock SESSION
         request.user = AnonymousUser()
         return request
 
@@ -77,19 +85,19 @@ class CartTestCase(SimpleTestCase):
         self.po4 = ProductOption.objects.create(name='option_3', price=4.1)
 
 
-    def test_product_additon(self):
+    def test_product_addition(self):
         self.assertEqual(len(self.cart), 0)
         
         self.cart.add(product=self.p1, quantity=3)
         self.assertEqual(len(self.cart), 3)
-        self.assertIn(self.p1, self.cart)
+        self.assertIn(str(self.p1.pk), self.cart._raw_cart)
 
-        self.cart.add(product=self.p2)  # quantitiy defaults to 1
-        self.assertEqual(len(self.cart.p1), 4)
-        self.assertIn(self.p2, self.cart)
+        self.cart.add(product=self.p2)  # quantity defaults to 1
+        self.assertEqual(len(self.cart), 4)
+        self.assertIn(str(self.p2.pk), self.cart._raw_cart)
 
         # make sure adding existing items to cart is working
-        self.cart.add(product=self.p1, quantitiy=1)
+        self.cart.add(product=self.p1, quantity=1)
         self.assertEqual(len(self.cart), 5)
         p1_item = self.cart._get_item(product=self.p1)
         self.assertEqual(p1_item['quantity'], 4)
@@ -100,36 +108,16 @@ class CartTestCase(SimpleTestCase):
         p1_item = self.cart._get_item(product=self.p1)
         self.assertEqual(p1_item['quantity'], 99)
 
-    def test_negative_quanitity_addition(self):
-        with self.assertRaises(NegativeQuantityExcpetion):
-            self.cart.add(product=self.p1, quantitiy=-1)
-
-    def test_zero_quantity_ignored(self):
-        self.cart.add(product=self.p1, quantitiy=4)
-        prev_len = len(self.cart)
-        self.cart.add(product=self.p2, quantitiy=0)
-        self.assertEqual(len(self.cart), prev_len)
-        self.assertNotIn(self.p2, self.cart)
-
-    def test_unavailable_product_not_added(self):
-        self.cart.add(product=self.p1, quantitiy=3)
-        prev_len = len(self.cart)
-        
-        with self.assertRaises(ProductUnvailableException):
-            self.cart.add(self.p3_unav, quantitiy=1)
-
-        self.assertEqual(len(self.cart), prev_len)
-
     def test_product_with_options_addition(self):
         self.assertEqual(len(self.cart), 0)
         self.cart.add(product=self.p1, options=(self.po1, self.po2),
-            quantitiy=2)
+            quantity=2)
         self.assertEqual(len(self.cart), 2)
-        self.cart.add(product=self.p2, quantitiy=3)
+        self.cart.add(product=self.p2, quantity=3)
         self.assertEqual(len(self.cart), 5)
 
         # make sure same product, but without options is treated separately
-        self.cart.add(product=self.p1, quantitiy=1)
+        self.cart.add(product=self.p1, quantity=1)
         self.assertEqual(len(self.cart), 6)
 
         item_no_opt = self.cart._get_item(product=self.p1)
@@ -155,10 +143,31 @@ class CartTestCase(SimpleTestCase):
             self.po2])
         self.assertEqual(item_opt['quantity'], 1)
 
+    def test_negative_quantity_addition(self):
+        with self.assertRaises(NegativeQuantityException):
+            self.cart.add(product=self.p1, quantity=-1)
+
+    def test_zero_quantity_ignored(self):
+        self.cart.add(product=self.p1, quantity=4)
+        prev_len = len(self.cart)
+        self.cart.add(product=self.p2, quantity=0)
+        self.assertEqual(len(self.cart), prev_len)
+        self.assertNotIn(str(self.p2), self.cart._raw_cart)
+
+    def test_unavailable_product_not_added(self):
+        self.cart.add(product=self.p1, quantity=3)
+        prev_len = len(self.cart)
+        
+        with self.assertRaises(ProductUnavailableException):
+            self.cart.add(self.p3_unav, quantity=1)
+
+        self.assertEqual(len(self.cart), prev_len)
+
+
     def test_product_removal(self):
-        self.cart.add(product=self.p1, quantitiy=3)
-        self.cart.add(product=self.p2, quantitiy=6)
-        self.cart.add(product=self.p4, options=(self.po1), quantitiy=8)
+        self.cart.add(product=self.p1, quantity=3)
+        self.cart.add(product=self.p2, quantity=6)
+        self.cart.add(product=self.p4, options=(self.po1), quantity=8)
         self.assertEqual(len(self.cart), 17)
         
         self.cart.remove(self.p2)
@@ -170,9 +179,9 @@ class CartTestCase(SimpleTestCase):
         self.assertIsNotNone(self.cart._get_item(product=self.p4))
 
     def test_product_with_options_removal(self):
-        self.cart.add(product=self.p1, quantitiy=3)
-        self.cart.add(product=self.p2, quantitiy=6)
-        self.cart.add(product=self.p4, options=(self.po1), quantitiy=8)
+        self.cart.add(product=self.p1, quantity=3)
+        self.cart.add(product=self.p2, quantity=6)
+        self.cart.add(product=self.p4, options=(self.po1), quantity=8)
         self.assertEqual(len(self.cart), 17)
         
         self.cart.remove(self.p4)
@@ -207,8 +216,8 @@ class CartTestCase(SimpleTestCase):
         self.assertEqual(len(self.cart), 0)
 
         self.cart.add(product=self.p1, options=(self.po1, self.po4, self.po3))
-        self.cart.add(products=self.p2, options=(self.po1), quantitiy=3)
-        self.cart.add(products=self.p4, quantitiy=1)
+        self.cart.add(products=self.p2, options=(self.po1), quantity=3)
+        self.cart.add(products=self.p4, quantity=1)
         self.assertEqual(len(self.cart), 5)
         
         self.cart.clear()
@@ -356,12 +365,10 @@ class CartTestCase(SimpleTestCase):
         Test that the items in cart return the expected "context" when iterated.
 
         This "context" includes:
-            * quantitiy - item's quantity
-            * original_price - item's original price
-            * offer_price - item's offer price (if present)
+            * quantity - item's quantity
             * total_options_price - price of all options, summed up (if present)
-            * total_original_price = original_price * quantity + options_price
-            * final_price - item's final price
+            * total_original_price = (original_price + options_price) * quantity
+            * total_final_price - item's final price
             * total_discount_percentage - total discount percentage, unlike
             Product.price, this also includes the price of the options
 
@@ -374,11 +381,11 @@ class CartTestCase(SimpleTestCase):
         
         for item in self.cart:
             self.assertEqual(item['quantity'], 3)
-            self.assertEqual(item['original_price'], 10)
+            self.assertEqual(item['product_original_price'], 10)
             self.assertEqual(item['offer_price'], 5)
             self.assertEqual(item['total_original_price'], 30)
             self.assertEqual(item['total_discount_percentage'], 0)
-            self.assertEqual(item['final_price'], 15)
+            self.assertEqual(item['total_final_price'], 15)
             self.assertEqual(item['total_options_price'], 0)
 
             with self.assertRaises(KeyError):
@@ -388,12 +395,11 @@ class CartTestCase(SimpleTestCase):
 
         self._price_prod_2(call_previous=False)
         for item in self.cart:
+            self.assertEqual(item['product'], self.p1)
             self.assertEqual(item['quantity'], 1)
-            self.assertEqual(item['original_price'], 0.34)
-            self.assertEqual(item['offer_price'], 0.12)
             self.assertEqual(item['total_original_price'], 15.79)
             self.assertEqual(item['total_discount_percentage'], 1.39)
-            self.assertEqual(item['final_price'], 15.57)
+            self.assertEqual(item['total_final_price'], 15.57)
             self.assertEqual(item['options'], {self.po1.pk : 12.31, 
                 self.po2.pk : 3.14})
             
@@ -415,7 +421,7 @@ class CartTestCase(SimpleTestCase):
         if call_previous:
             self._price_prod_1()
         self.cart.add(product=self.p2, options=(self.po1, self.po2),
-            quantitiy=1)  # adds 15.57
+            quantity=1)  # adds 15.57
 
     def _price_prod_3(self, call_previous=True):
         if call_previous:
@@ -426,4 +432,4 @@ class CartTestCase(SimpleTestCase):
         if call_previous:
             self._price_prod_3()
         self.cart.add(product=self.p5,
-            options=(self.po4), quantitiy=4)  # adds 28.96
+            options=(self.po4), quantity=4)  # adds 28.96
