@@ -320,17 +320,17 @@ class CartTestCase(TestCase):
 
         self._price_prod_2()
         discount = self.cart.get_total_discount()
-        self.assertEqual(discount, 15.12)
+        self.assertEqual(discount, 15.22)
         self.cart.clear()
         
         self._price_prod_3()
         discount = self.cart.get_total_discount()
-        self.assertEqual(discount, 15.12)
+        self.assertEqual(discount, 15.22)
         self.cart.clear()
 
         self._price_prod_4()
         discount = self.cart.get_total_discount()
-        self.assertEqual(discount, 15.12)
+        self.assertEqual(discount, 15.22)
 
     def test_original_price(self):
         """
@@ -407,11 +407,11 @@ class CartTestCase(TestCase):
         self._price_prod_1(call_previous=False)
         
         for item in self.cart:
+            self.assertEqual(item['product'], self.p1)
+            self.assertEqual(item['product'].price, 10)
             self.assertEqual(item['quantity'], 3)
-            self.assertEqual(item['product_original_price'], 10)
-            self.assertEqual(item['offer_price'], 5)
             self.assertEqual(item['total_original_price'], 30)
-            self.assertEqual(item['total_discount_percentage'], 0)
+            self.assertEqual(item['total_discount_percentage'], 50)
             self.assertEqual(item['total_final_price'], 15)
             self.assertEqual(item['total_options_price'], 0)
 
@@ -422,14 +422,12 @@ class CartTestCase(TestCase):
 
         self._price_prod_2(call_previous=False)
         for item in self.cart:
-            self.assertEqual(item['product'], self.p1)
+            self.assertEqual(item['product'], self.p2)
             self.assertEqual(item['quantity'], 1)
             self.assertEqual(item['total_original_price'], 15.79)
             self.assertEqual(item['total_discount_percentage'], 1.39)
             self.assertEqual(item['total_final_price'], 15.57)
-            self.assertEqual(item['options'], {self.po1.pk : 12.31, 
-                self.po2.pk : 3.14})
-            
+            self.assertCountEqual(item['options'], [self.po1, self.po2])
             self.assertEqual(item['total_options_price'], 15.45)
         
 

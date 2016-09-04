@@ -97,6 +97,9 @@ class Cart(object):
         return sum(item['total_final_price'] for item in self)
 
     def get_offer_discount(self):
+        """
+        Get the cart's total discount from prouct offer prices.
+        """
         discount_price_total = 0
         for item in self:
             product = item['product']
@@ -105,6 +108,35 @@ class Cart(object):
                     product.offer_price) * item['quantity'])
         return discount_price_total
 
+    def get_total_discount(self):
+        """
+        Get hte cart's total discount, this includes offer prices and coupons.
+        """
+        # TODO: alter when coupons are added
+        return self.get_offer_discount()
+
+    def get_original_price(self):
+        """
+        Get the cart's total original price (without offers or coupons).
+        """
+        original_price = 0
+        for item in self:
+            original_price += (float(item['product'].price) + 
+                item['total_options_price']) * item['quantity']
+        return float(original_price)
+
+    def get_total_discount_percentage(self):
+        """
+        Get the total discount percentage of the cart.
+        It's basically 100 - (final_price * 100 / original_price) 
+        """
+        if self.get_original_price() == 0:
+            # we don't want to divide by zero, this happens when the carts
+            # total price is 0 (like when it's empty)
+            return 0
+        res = Decimal(100) - (Decimal(self.get_final_price()) * Decimal(100) / 
+            Decimal(self.get_original_price()))
+        return float(round_decimal(res))
 
     def _get_product_with_options_key(self, options):
         option_ids = sorted([option.pk for option in options])
@@ -118,10 +150,14 @@ class Cart(object):
         """
         context = {}
         context['quantity'] = 0  # this is not a typo, it will be updated later
-        context['total_options_price'] = float(sum (option.price for option in options)
-            if options else 0)
-        context['total_final_price'] = (product.current_price + 
-                                    context['total_options_price']) * quantity
+        total_opt_price = Decimal(sum(option.price for option in options)) if options else Decimal(0)
+        total_opt_price = round_decimal(total_opt_price)
+        context['total_options_price'] = float(total_opt_price)
+        total_final_price = round_decimal((Decimal(product.current_price) 
+                                    + Decimal(context['total_options_price'])) 
+                                    * Decimal(quantity))
+
+        context['total_final_price'] = float(total_final_price)
         return context
 
 
@@ -143,14 +179,17 @@ class Cart(object):
             options = ProductOption.objects.filter(pk__in=option_ids)
             new_context['options'] = options
         
-        new_context['total_original_price'] = (float(product.price) + 
-            context['total_options_price']) * context['quantity']
+        total_original_price = round_decimal((product.price 
+                                    + Decimal(context['total_options_price']))
+                                    * Decimal(context['quantity']))
+        new_context['total_original_price'] = float(total_original_price)
         
         if product.has_offer:
-            discount = float((context['total_final_price'] 
-                * 100) / new_context['total_original_price'])
-            discount = float(round_decimal(Decimal(discount)))
-            new_context['total_discount_percentage'] = 100 - discount
+            discount = (Decimal(context['total_final_price'])
+                * Decimal(100) / Decimal(new_context['total_original_price']))
+            discount = round_decimal(Decimal(discount))
+            new_context['total_discount_percentage'] = float(Decimal(100) 
+                                                            - discount)
 
 
         return {**context, **new_context}
