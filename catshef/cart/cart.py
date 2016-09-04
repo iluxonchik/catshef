@@ -61,6 +61,14 @@ class Cart(object):
             cart_product[key]['quantity'] += quantity
         self.save()
 
+    def remove(self, product, options=None):
+        key = self._get_product_key(options)
+        cart_product = self._cart.get(str(product.pk))
+        if cart_product:
+            if cart_product.get(key):
+                del cart_product[key]
+                self.save()
+
     def save(self):
         """
         Save the cart in session.

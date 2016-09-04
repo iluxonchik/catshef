@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from cart.cart import Cart
 from cart.exceptions import (ProductUnavailableException,
     NegativeQuantityException, ProductStockZeroException)
@@ -163,11 +165,10 @@ class CartTestCase(TestCase):
 
         self.assertEqual(len(self.cart), prev_len)
 
-
     def test_product_removal(self):
         self.cart.add(product=self.p1, quantity=3)
         self.cart.add(product=self.p2, quantity=6)
-        self.cart.add(product=self.p4, options=(self.po1), quantity=8)
+        self.cart.add(product=self.p4, options=(self.po1,), quantity=8)
         self.assertEqual(len(self.cart), 17)
         
         self.cart.remove(self.p2)
@@ -176,21 +177,39 @@ class CartTestCase(TestCase):
         # make sure the correct item is removed
         self.assertIsNone(self.cart._get_item(product=self.p2))
         self.assertIsNotNone(self.cart._get_item(product=self.p1))
-        self.assertIsNotNone(self.cart._get_item(product=self.p4))
+        self.assertIsNotNone(self.cart._get_item(product=self.p4,
+            options=(self.po1,)))
 
     def test_product_with_options_removal(self):
         self.cart.add(product=self.p1, quantity=3)
         self.cart.add(product=self.p2, quantity=6)
-        self.cart.add(product=self.p4, options=(self.po1), quantity=8)
+        self.cart.add(product=self.p4, options=(self.po1,), quantity=8)
         self.assertEqual(len(self.cart), 17)
         
-        self.cart.remove(self.p4)
+        self.cart.remove(self.p4, options=(self.po1,))
         self.assertEqual(len(self.cart), 9)
 
         # make sure the correct item is removed
         self.assertIsNone(self.cart._get_item(product=self.p4))
         self.assertIsNotNone(self.cart._get_item(product=self.p1))
         self.assertIsNotNone(self.cart._get_item(product=self.p2))
+
+    def test_non_existent_product_removal_ignored(self):
+        """
+        Test that the removal of a non-existent product/options combination
+        is ignored (i.e.) nothing is done.
+        """
+        self.cart.add(product=self.p1, options=(self.po1,), quantity=3)
+        self.cart.add(product=self.p2, quantity=6)
+        prev_raw_cart = deepcopy(self.cart._raw_cart)
+        self.cart.remove(product=self.p1)
+        self.assertEqual(prev_raw_cart, self.cart._raw_cart)
+        
+        self.cart.remove(product=self.p1, options=(self.po1, self.po2))
+        self.assertEqual(prev_raw_cart, self.cart._raw_cart)
+        
+        self.cart.remove(product=self.p4)
+        self.assertEqual(prev_raw_cart, self.cart._raw_cart)
 
     def test_over_stock_additon(self):
         """
