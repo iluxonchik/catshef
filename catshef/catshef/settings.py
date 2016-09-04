@@ -138,6 +138,11 @@ STATIC_URL = '/static/'
 # django.auth settings
 LOGIN_URL = '/account/login/'  # TODO: decide on url
 
+# cart app settings
+INSTALLED_APPS += [
+    'cart',
+]
+
 # django-allauth settings
 AUTHENTICATION_BACKENDS += (
     # `allauth` specific authentication methods, such as login by e-mail
@@ -184,7 +189,6 @@ INSTALLED_APPS += [
 ]
 
 # convert messages to SnackBars(toasts, actually)
-
 MIDDLEWARE_CLASSES += [
     'catshef.middleware.mtosmiddleware.MessageToSnackBarMiddleware',
 ]

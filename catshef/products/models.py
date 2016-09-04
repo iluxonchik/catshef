@@ -1,12 +1,14 @@
 import decimal
 
+from products.utils.conversion import round_decimal
+
 from django.db import models
 from django.db.models import Count
 import django.core.exceptions as exceptions
 
 from django.core.urlresolvers import reverse
 
-from products.utils.nutrition import CAL2000
+from products.utils.nutrition import CAL2000    
 
 class AvailableManager(models.Manager):
     """
@@ -106,9 +108,6 @@ class Product(models.Model):
         if limit:
             similar_posts = similar_posts[:limit]
         return similar_posts
-
-
-
 
     def __str__(self):
         return self.name
@@ -263,4 +262,55 @@ class Ingridient(models.Model):
 
     def __str__(self):
         return self.name
+
+class Membership(models.Model):
+    """
+    Through model for ProductOptionGroup to ProductOption many-to-many
+    relationship.
+
+    This model is here, to allow for easier extension if needed later.
+    """
+    group = models.ForeignKey('ProductOptionGroup', on_delete=models.CASCADE)
+    option = models.ForeignKey('ProductOption',
+        related_name='membership', on_delete=models.CASCADE)
+
+class ProductOption(models.Model):
+    DECIMAL_PLACES = 2  # decimal_places argument of models.DecimalField
+
+    name = models.CharField(max_length=255)
+    price = models.DecimalField(max_digits=10, decimal_places=DECIMAL_PLACES)
+    description = models.TextField(blank=True, null=True)
+
+    def rounded_price(self, precision=DECIMAL_PLACES,
+        rounding=decimal.ROUND_HALF_UP):
+        """
+        Helper method to get the rounded price of a product option
+        """
+        if not isinstance(self.price, int):
+            return float(round_decimal(decimal.Decimal(self.price), 
+                precision=precision,
+                rounding=rounding))
+        return self.price
+
+    def __str__(self):
+        return self.name
+
+class ProductOptionGroup(models.Model):
+    RADIO = 1
+    CHECKBOX = 2
+    DROPDOWN = 3
+    TYPE_CHOICES = (
+        (RADIO, 'Radio'),
+        (CHECKBOX, 'Checkbox'),
+        (DROPDOWN, 'Dropdown'),
+    )
+    name = models.CharField(max_length=255)
+    type = models.SmallIntegerField(choices=TYPE_CHOICES)
+    options = models.ManyToManyField(ProductOption, through='Membership',
+        through_fields=('group', 'option'), related_name='groups')
+    description = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
 

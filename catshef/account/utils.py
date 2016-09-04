@@ -1,8 +1,9 @@
 """
-Utility functions.
+account utility functions.
 """
 from catshef.exceptions import ArgumentError
 from allauth.account.models import EmailAddress
+
 
 def is_email_verified(user=None, request=None):
     """
@@ -18,4 +19,5 @@ def is_email_verified(user=None, request=None):
         user = request.user
 
     return EmailAddress.objects.filter(user=user, verified=True).exists()
+
 
