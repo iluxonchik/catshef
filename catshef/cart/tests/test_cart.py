@@ -80,6 +80,14 @@ class CartTestCase(TestCase):
             offer_price=5.42,
             available=True)
 
+        self.p7 = Product.objects.create(
+            name='p7',
+            slug='p7',
+            stock=21,
+            price=14.21,
+            offer_price=5,
+            available=True)
+
     def _setup_product_options(self):
         self.po1 = ProductOption.objects.create(name='option_1', price=12.31)
         self.po2 = ProductOption.objects.create(name='option_2', price=3.14)
@@ -168,7 +176,7 @@ class CartTestCase(TestCase):
     def test_product_removal(self):
         self.cart.add(product=self.p1, quantity=3)
         self.cart.add(product=self.p2, quantity=6)
-        self.cart.add(product=self.p4, options=(self.po1,), quantity=8)
+        self.cart.add(product=self.p7, options=(self.po1,), quantity=8)
         self.assertEqual(len(self.cart), 17)
         
         self.cart.remove(self.p2)
@@ -177,20 +185,20 @@ class CartTestCase(TestCase):
         # make sure the correct item is removed
         self.assertIsNone(self.cart._get_item(product=self.p2))
         self.assertIsNotNone(self.cart._get_item(product=self.p1))
-        self.assertIsNotNone(self.cart._get_item(product=self.p4,
+        self.assertIsNotNone(self.cart._get_item(product=self.p7,
             options=(self.po1,)))
 
     def test_product_with_options_removal(self):
         self.cart.add(product=self.p1, quantity=3)
         self.cart.add(product=self.p2, quantity=6)
-        self.cart.add(product=self.p4, options=(self.po1,), quantity=8)
+        self.cart.add(product=self.p7, options=(self.po1,), quantity=8)
         self.assertEqual(len(self.cart), 17)
         
-        self.cart.remove(self.p4, options=(self.po1,))
+        self.cart.remove(self.p7, options=(self.po1,))
         self.assertEqual(len(self.cart), 9)
 
         # make sure the correct item is removed
-        self.assertIsNone(self.cart._get_item(product=self.p4))
+        self.assertIsNone(self.cart._get_item(product=self.p7))
         self.assertIsNotNone(self.cart._get_item(product=self.p1))
         self.assertIsNotNone(self.cart._get_item(product=self.p2))
 
@@ -235,8 +243,8 @@ class CartTestCase(TestCase):
         self.assertEqual(len(self.cart), 0)
 
         self.cart.add(product=self.p1, options=(self.po1, self.po4, self.po3))
-        self.cart.add(products=self.p2, options=(self.po1), quantity=3)
-        self.cart.add(products=self.p4, quantity=1)
+        self.cart.add(product=self.p2, options=(self.po1,), quantity=3)
+        self.cart.add(product=self.p4, quantity=1)
         self.assertEqual(len(self.cart), 5)
         
         self.cart.clear()

@@ -109,9 +109,6 @@ class Product(models.Model):
             similar_posts = similar_posts[:limit]
         return similar_posts
 
-
-
-
     def __str__(self):
         return self.name
 

@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from catshef.exceptions import ArgumentError
 from cart.exceptions import (NegativeQuantityException,
-    ProductUnavailableException)
+    ProductUnavailableException, ProductStockZeroException)
 from products.utils.conversion import round_decimal
 
 from django.conf import settings
@@ -39,6 +39,15 @@ class Cart(object):
                 'avaiable and can\'t be added to the cart.'.format(product.name,
                     product.pk))
 
+        if product.stock < 1:
+            raise ProductStockZeroException('The stock for product "{}" (pk={})'
+                ' is zero. It can\'t be added to the cart.'.format(product.name,
+                    product.pk))
+
+        if product.stock < quantity:
+            # only add up to the available stock
+            quantity = product.stock
+
         product_id = str(product.pk)
 
         # let's build the key
@@ -68,6 +77,10 @@ class Cart(object):
             if cart_product.get(key):
                 del cart_product[key]
                 self.save()
+
+    def clear(self):
+        self._cart = {}
+        self.save()
 
     def save(self):
         """
@@ -127,7 +140,7 @@ class Cart(object):
         """
         if options:
             if not isinstance(options, collections.Iterable):
-                raise ArgumentError('\'optons\' argument must be an iterable')
+                raise ArgumentError('\'options\' argument must be an iterable')
             key = self._get_product_with_options_key(options)
         else:
             key = ''
