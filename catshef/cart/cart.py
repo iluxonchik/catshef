@@ -32,7 +32,7 @@ class Cart(object):
                 'The passed in value was {}'.format(quantity))
         if quantity == 0:
             # if the added quantity is zero, just ignore the addition(no effect)
-            pass
+            return
 
         if not product.available:
             raise ProductUnavailableException('"{}" product (pk={}) is not'
@@ -89,6 +89,23 @@ class Cart(object):
         self.session[Cart.SESSION_ID] = self._cart
         self.session.modified = True
 
+    # price related methods
+    def get_final_price(self):
+        """
+        Get the cart's final price, with all of the discounts and coupons.
+        """
+        return sum(item['total_final_price'] for item in self)
+
+    def get_offer_discount(self):
+        discount_price_total = 0
+        for item in self:
+            product = item['product']
+            if product.has_offer:
+                discount_price_total += (float(product.price - 
+                    product.offer_price) * item['quantity'])
+        return discount_price_total
+
+
     def _get_product_with_options_key(self, options):
         option_ids = sorted([option.pk for option in options])
         option_ids = [str(option) for option in option_ids]
@@ -101,14 +118,14 @@ class Cart(object):
         """
         context = {}
         context['quantity'] = 0  # this is not a typo, it will be updated later
-        context['total_options_price'] = (sum (option.price for option in options)
+        context['total_options_price'] = float(sum (option.price for option in options)
             if options else 0)
         context['total_final_price'] = (product.current_price + 
                                     context['total_options_price']) * quantity
         return context
 
 
-    def _complete_cart_product(self, product_id, key, context):
+    def _complete_cart_product(self, product, key, context):
         """
         Compelete the cart's context with more info, as well as product and
         options objects (if present). This should be called in __iter__().
@@ -116,21 +133,25 @@ class Cart(object):
         This function does not alter the passed in context.
         """
         new_context = {}
-        product = Product.active.get(pk=int(product_id))
         
+        new_context['product'] = product
+
         if key:
             # init options if needed
             option_ids = key.split(Cart.KEY_SEPARATOR)
             option_ids = [int(id) for id in option_ids]
             options = ProductOption.objects.filter(pk__in=option_ids)
             new_context['options'] = options
-        new_context['total_original_price'] = (product.price + 
+        
+        new_context['total_original_price'] = (float(product.price) + 
             context['total_options_price']) * context['quantity']
+        
         if product.has_offer:
-            discount = ((context['total_final_price'] 
-                * 100) / context['total_original_price'])
-            discount = round_decimal(Decimal(discount))
-            new_context['total_discount_percentage'] = float(100 - discount)
+            discount = float((context['total_final_price'] 
+                * 100) / new_context['total_original_price'])
+            discount = float(round_decimal(Decimal(discount)))
+            new_context['total_discount_percentage'] = 100 - discount
+
 
         return {**context, **new_context}
 
@@ -175,10 +196,16 @@ class Cart(object):
         return self._cart
 
     def __len__(self):
-        num_items = 0
-        for cart_item in self._cart.values():
-            for item_value in cart_item.values():
-                num_items += item_value['quantity']
-        return num_items
+        return sum(item['quantity'] for item in self)
 
 
+    def __iter__(self):
+        # TODO: complete context
+        for product_pk in self._raw_cart:
+            product_cart = self._raw_cart[product_pk]
+            product = Product.objects.get(pk=product_pk)
+            for key in product_cart:
+                item = product_cart[key]
+                item = self._complete_cart_product(product, key, item)
+                # import pdb; pdb.set_trace()
+                yield item

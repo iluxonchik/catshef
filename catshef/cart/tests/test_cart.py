@@ -68,7 +68,7 @@ class CartTestCase(TestCase):
         self.p5 = Product.objects.create(
             name='p5',
             slug='p5',
-            stock=3,
+            stock=10,
             price=3.14,
             available=True)
 
@@ -92,7 +92,7 @@ class CartTestCase(TestCase):
         self.po1 = ProductOption.objects.create(name='option_1', price=12.31)
         self.po2 = ProductOption.objects.create(name='option_2', price=3.14)
         self.po3 = ProductOption.objects.create(name='option_3', price=10)
-        self.po4 = ProductOption.objects.create(name='option_3', price=4.1)
+        self.po4 = ProductOption.objects.create(name='option_4', price=4.1)
 
 
     def test_product_addition(self):
@@ -229,12 +229,12 @@ class CartTestCase(TestCase):
         * If the stock is 0 and an addition is made, make sure an exception is
         thrown.
         """
-        self.cart.add(product=self.p5, quantity=6)
-        self.assertEqual(len(self.cart), 3)
+        self.cart.add(product=self.p5, quantity=25)
+        self.assertEqual(len(self.cart), 10)
 
         with self.assertRaises(ProductStockZeroException):
             self.cart.add(product=self.p6)
-        self.assertEqual(len(self.cart), 3)
+        self.assertEqual(len(self.cart), 10)
 
     def test_cart_clear(self):
         # make sure cleaning an empty cart works
@@ -292,17 +292,17 @@ class CartTestCase(TestCase):
 
         self._price_prod_2()
         discount = self.cart.get_offer_discount()
-        self.assertEqual(discount, 15.12)
+        self.assertEqual(discount, 15.22)
         self.cart.clear()
         
         self._price_prod_3()
         discount = self.cart.get_offer_discount()
-        self.assertEqual(discount, 15.12)
+        self.assertEqual(discount, 15.22)
         self.cart.clear()
 
         self._price_prod_4()
         discount = self.cart.get_offer_discount()
-        self.assertEqual(discount, 15.12)
+        self.assertEqual(discount, 15.22)
 
     def test_total_discount(self):
         """
@@ -459,4 +459,4 @@ class CartTestCase(TestCase):
         if call_previous:
             self._price_prod_3()
         self.cart.add(product=self.p5,
-            options=(self.po4), quantity=4)  # adds 28.96
+            options=(self.po4,), quantity=4)  # adds 28.96
