@@ -4,7 +4,7 @@ from decimal import Decimal
 from catshef.exceptions import ArgumentError
 from cart.exceptions import (NegativeQuantityException,
     ProductUnavailableException, ProductStockZeroException)
-from products.utils.conversion import round_decimal
+from products.utils.conversion import round_decimal, to_decimal
 
 from django.conf import settings
 from products.models import Product, ProductOption
@@ -17,7 +17,9 @@ class Cart(object):
     def __init__(self, request):
         """
         Initialize cart from a request instance. Internally the cart is stored
-        in the session.
+        in the session. All of the Cart internals work with Decimals.
+        All of the Cart methods return a Decimal (except for 
+        magic methods).
         """
         self.session = request.session
         cart = self.session.get(Cart.SESSION_ID)
@@ -100,11 +102,11 @@ class Cart(object):
         """
         Get the cart's total discount from prouct offer prices.
         """
-        discount_price_total = 0
+        discount_price_total = Decimal(0)
         for item in self:
             product = item['product']
             if product.has_offer:
-                discount_price_total += (float(product.price - 
+                discount_price_total += ((product.price - 
                     product.offer_price) * item['quantity'])
         return discount_price_total
 
@@ -119,11 +121,11 @@ class Cart(object):
         """
         Get the cart's total original price (without offers or coupons).
         """
-        original_price = 0
+        original_price = Decimal(0)
         for item in self:
-            original_price += (float(item['product'].price) + 
+            original_price += ((item['product'].price) + 
                 item['total_options_price']) * item['quantity']
-        return float(original_price)
+        return round_decimal(original_price)
 
     def get_total_discount_percentage(self):
         """
@@ -136,7 +138,7 @@ class Cart(object):
             return 0
         res = Decimal(100) - (Decimal(self.get_final_price()) * Decimal(100) / 
             Decimal(self.get_original_price()))
-        return float(round_decimal(res))
+        return round_decimal(res)
 
     def _get_product_with_options_key(self, options):
         option_ids = sorted([option.pk for option in options])
@@ -149,15 +151,14 @@ class Cart(object):
         it in the cart.
         """
         context = {}
-        context['quantity'] = 0  # this is not a typo, it will be updated later
-        total_opt_price = Decimal(sum(option.price for option in options)) if options else Decimal(0)
-        total_opt_price = round_decimal(total_opt_price)
-        context['total_options_price'] = float(total_opt_price)
+        context['quantity'] = Decimal(0)  # this is not a typo, it will be updated later
+        total_opt_price = sum(option.price for option in options) if options else Decimal(0)
+        context['total_options_price'] = to_decimal(total_opt_price)
         total_final_price = round_decimal((Decimal(product.current_price) 
-                                    + Decimal(context['total_options_price'])) 
+                                    + context['total_options_price'])
                                     * Decimal(quantity))
 
-        context['total_final_price'] = float(total_final_price)
+        context['total_final_price'] = total_final_price
         return context
 
 
@@ -180,17 +181,14 @@ class Cart(object):
             new_context['options'] = options
         
         total_original_price = round_decimal((product.price 
-                                    + Decimal(context['total_options_price']))
-                                    * Decimal(context['quantity']))
-        new_context['total_original_price'] = float(total_original_price)
+                                    + context['total_options_price'])
+                                    * context['quantity'])
+        new_context['total_original_price'] = total_original_price
         
         if product.has_offer:
-            discount = (Decimal(context['total_final_price'])
-                * Decimal(100) / Decimal(new_context['total_original_price']))
-            discount = round_decimal(Decimal(discount))
-            new_context['total_discount_percentage'] = float(Decimal(100) 
-                                                            - discount)
-
+            discount = round_decimal((context['total_final_price']
+                * Decimal(100)) / new_context['total_original_price'])
+            new_context['total_discount_percentage'] = Decimal(100) - discount
 
         return {**context, **new_context}
 
@@ -235,7 +233,7 @@ class Cart(object):
         return self._cart
 
     def __len__(self):
-        return sum(item['quantity'] for item in self)
+        return int(sum(item['quantity'] for item in self))
 
 
     def __iter__(self):
