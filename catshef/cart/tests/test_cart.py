@@ -1,5 +1,7 @@
 from copy import deepcopy
 
+from decimal import Decimal
+
 from cart.cart import Cart
 from cart.exceptions import (ProductUnavailableException,
     NegativeQuantityException, ProductStockZeroException)
@@ -110,13 +112,13 @@ class CartTestCase(TestCase):
         self.cart.add(product=self.p1, quantity=1)
         self.assertEqual(len(self.cart), 5)
         p1_item = self.cart._get_item(product=self.p1)
-        self.assertEqual(p1_item['quantity'], 4)
+        self.assertEqual(p1_item['quantity'], Decimal(4))
 
         # make sure update_quantity parameter is working as expected
         self.cart.add(product=self.p1, quantity=99, update_quantity=True)
         self.assertEqual(len(self.cart), 100)
         p1_item = self.cart._get_item(product=self.p1)
-        self.assertEqual(p1_item['quantity'], 99)
+        self.assertEqual(p1_item['quantity'], Decimal(99))
 
     def test_product_with_options_addition(self):
         self.assertEqual(len(self.cart), 0)
@@ -134,8 +136,8 @@ class CartTestCase(TestCase):
         item_opt = self.cart._get_item(product=self.p1, options=[self.po1,
             self.po2])
         self.assertNotEqual(item_no_opt, item_opt)
-        self.assertEqual(item_no_opt['quantity'], 1)
-        self.assertEqual(item_opt['quantity'], 2)
+        self.assertEqual(item_no_opt['quantity'], Decimal(1))
+        self.assertEqual(item_opt['quantity'], Decimal(2))
 
         # make sure products with options are updated, this time the
         # options are presented in the reverse order
@@ -143,7 +145,7 @@ class CartTestCase(TestCase):
         self.assertEqual(len(self.cart), 7)
         item_opt = self.cart._get_item(product=self.p1, options=[self.po1,
             self.po2])
-        self.assertEqual(item_opt['quantity'], 3)
+        self.assertEqual(item_opt['quantity'], Decimal(3))
 
         # make sure update_quantity works when used on products with options
         self.cart.add(product=self.p1, options=(self.po1, self.po2),
@@ -151,7 +153,7 @@ class CartTestCase(TestCase):
         self.assertEqual(len(self.cart), 5)
         item_opt = self.cart._get_item(product=self.p1, options=[self.po1,
             self.po2])
-        self.assertEqual(item_opt['quantity'], 1)
+        self.assertEqual(item_opt['quantity'], Decimal(1))
 
     def test_negative_quantity_addition(self):
         with self.assertRaises(NegativeQuantityException):
@@ -257,52 +259,52 @@ class CartTestCase(TestCase):
         Test that the final price (with all discounts and coupons) is correct.
         """
         price = self.cart.get_final_price()
-        self.assertEqual(price, 0)
+        self.assertEqual(price, Decimal(0))
 
         self._price_prod_1()
         price = self.cart.get_final_price()
-        self.assertEqual(price, 15)
+        self.assertEqual(price, Decimal(15))
         self.cart.clear()
 
         self._price_prod_2()
         price = self.cart.get_final_price()
-        self.assertEqual(price, 30.57)
+        self.assertEqual(price, Decimal('30.57'))
         self.cart.clear()
         
         self._price_prod_3()
         price = self.cart.get_final_price()
-        self.assertEqual(price, 33.71)
+        self.assertEqual(price, Decimal('33.71'))
         self.cart.clear()
 
         self._price_prod_4()
         price = self.cart.get_final_price()
-        self.assertEqual(price, 62.67)
+        self.assertEqual(price, Decimal('62.67'))
 
     def test_offer_discount(self):
         """
         Test that the total discounted price from offers is correct.
         """
         discount = self.cart.get_offer_discount()
-        self.assertEqual(discount, 0)
+        self.assertEqual(discount, Decimal(0))
 
         self._price_prod_1()
         discount = self.cart.get_offer_discount()
-        self.assertEqual(discount, 15)
+        self.assertEqual(discount, Decimal(15))
         self.cart.clear()
 
         self._price_prod_2()
         discount = self.cart.get_offer_discount()
-        self.assertEqual(discount, 15.22)
+        self.assertEqual(discount, Decimal('15.22'))
         self.cart.clear()
         
         self._price_prod_3()
         discount = self.cart.get_offer_discount()
-        self.assertEqual(discount, 15.22)
+        self.assertEqual(discount, Decimal('15.22'))
         self.cart.clear()
 
         self._price_prod_4()
         discount = self.cart.get_offer_discount()
-        self.assertEqual(discount, 15.22)
+        self.assertEqual(discount, Decimal('15.22'))
 
     def test_total_discount(self):
         """
@@ -311,52 +313,52 @@ class CartTestCase(TestCase):
         # TODO: complete when coupons are implemented, right now it's just a
         # copy of test_offer_discount()
         discount = self.cart.get_total_discount()
-        self.assertEqual(discount, 0)
+        self.assertEqual(discount, Decimal(0))
 
         self._price_prod_1()
         discount = self.cart.get_total_discount()
-        self.assertEqual(discount, 15)
+        self.assertEqual(discount, Decimal(15))
         self.cart.clear()
 
         self._price_prod_2()
         discount = self.cart.get_total_discount()
-        self.assertEqual(discount, 15.22)
+        self.assertEqual(discount, Decimal('15.22'))
         self.cart.clear()
         
         self._price_prod_3()
         discount = self.cart.get_total_discount()
-        self.assertEqual(discount, 15.22)
+        self.assertEqual(discount, Decimal('15.22'))
         self.cart.clear()
 
         self._price_prod_4()
         discount = self.cart.get_total_discount()
-        self.assertEqual(discount, 15.22)
+        self.assertEqual(discount, Decimal('15.22'))
 
     def test_original_price(self):
         """
         Test that the original price (without offers or coupons) is correct.
         """
         price = self.cart.get_original_price()
-        self.assertEqual(price, 0)
+        self.assertEqual(price, Decimal(0))
 
         self._price_prod_1()
         price = self.cart.get_original_price()
-        self.assertEqual(price, 30)
+        self.assertEqual(price, Decimal(30))
         self.cart.clear()
 
         self._price_prod_2()
         price = self.cart.get_original_price()
-        self.assertEqual(price, 45.79)
+        self.assertEqual(price, Decimal('45.79'))
         self.cart.clear()
         
         self._price_prod_3()
         price = self.cart.get_original_price()
-        self.assertEqual(price, 48.93)
+        self.assertEqual(price, Decimal('48.93'))
         self.cart.clear()
 
         self._price_prod_4()
         price = self.cart.get_original_price()
-        self.assertEqual(price, 77.89)
+        self.assertEqual(price, Decimal('77.89'))
 
     def test_total_discount_percentage(self):
         """
@@ -366,26 +368,26 @@ class CartTestCase(TestCase):
         It's basically 100 - (final_price * 100 / original_price) 
         """
         discount = self.cart.get_total_discount_percentage()
-        self.assertEqual(discount, 0)
+        self.assertEqual(discount, Decimal(0))
 
         self._price_prod_1()
         discount = self.cart.get_total_discount_percentage()
-        self.assertEqual(discount, 50)
+        self.assertEqual(discount, Decimal(50))
         self.cart.clear()
 
         self._price_prod_2()
         discount = self.cart.get_total_discount_percentage()
-        self.assertEqual(discount, 33.24)
+        self.assertEqual(discount, Decimal('33.24'))
         self.cart.clear()
         
         self._price_prod_3()
         discount = self.cart.get_total_discount_percentage()
-        self.assertEqual(discount, 31.11)
+        self.assertEqual(discount, Decimal('31.11'))
         self.cart.clear()
 
         self._price_prod_4()
         discount = self.cart.get_total_discount_percentage()
-        self.assertEqual(discount, 19.54)
+        self.assertEqual(discount, Decimal('19.54'))
 
     def test_cart_item_context(self):
         """
@@ -408,12 +410,12 @@ class CartTestCase(TestCase):
         
         for item in self.cart:
             self.assertEqual(item['product'], self.p1)
-            self.assertEqual(item['product'].price, 10)
-            self.assertEqual(item['quantity'], 3)
-            self.assertEqual(item['total_original_price'], 30)
-            self.assertEqual(item['total_discount_percentage'], 50)
-            self.assertEqual(item['total_final_price'], 15)
-            self.assertEqual(item['total_options_price'], 0)
+            self.assertEqual(item['product'].price, Decimal(10))
+            self.assertEqual(item['quantity'], Decimal(3))
+            self.assertEqual(item['total_original_price'], Decimal(30))
+            self.assertEqual(item['total_discount_percentage'], Decimal(50))
+            self.assertEqual(item['total_final_price'], Decimal(15))
+            self.assertEqual(item['total_options_price'], Decimal(0))
 
             with self.assertRaises(KeyError):
                 item['options']
@@ -423,12 +425,12 @@ class CartTestCase(TestCase):
         self._price_prod_2(call_previous=False)
         for item in self.cart:
             self.assertEqual(item['product'], self.p2)
-            self.assertEqual(item['quantity'], 1)
-            self.assertEqual(item['total_original_price'], 15.79)
-            self.assertEqual(item['total_discount_percentage'], 1.39)
-            self.assertEqual(item['total_final_price'], 15.57)
+            self.assertEqual(item['quantity'], Decimal(1))
+            self.assertEqual(item['total_original_price'], Decimal('15.79'))
+            self.assertEqual(item['total_discount_percentage'], Decimal('1.39'))
+            self.assertEqual(item['total_final_price'], Decimal('15.57'))
             self.assertCountEqual(item['options'], [self.po1, self.po2])
-            self.assertEqual(item['total_options_price'], 15.45)
+            self.assertEqual(item['total_options_price'], Decimal('15.45'))
         
 
     
