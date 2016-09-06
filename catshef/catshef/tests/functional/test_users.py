@@ -1,4 +1,3 @@
-import re
 from time import sleep
 
 from .utils import find_urls
