@@ -324,6 +324,7 @@ class ProductOptionGroup(models.Model):
         (CHECKBOX, 'Checkbox'),
         (DROPDOWN, 'Dropdown'),
     )
+    products = models.ManyToManyField('Product', related_name='groups')
     name = models.CharField(max_length=255)
     type = models.SmallIntegerField(choices=TYPE_CHOICES)
     options = models.ManyToManyField(ProductOption, through='Membership',
