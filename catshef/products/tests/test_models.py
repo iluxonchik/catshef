@@ -496,6 +496,7 @@ class ProductOptionGroupTestCase(TestCase):
 class ProductOptionProductMembershipTestCase(TestCase):
 
     def setUp(self):
+        self._setup_products()
         self._setup_product_options()
         self._setup_product_option_groups()
         self._setup_memberships()
@@ -520,6 +521,34 @@ class ProductOptionProductMembershipTestCase(TestCase):
             type=ProductOptionGroup.RADIO)
         self.g6 = ProductOptionGroup.objects.create(name='group_6',
             type=ProductOptionGroup.DROPDOWN)
+
+    def _setup_products(self):
+        self.p1 = Product.objects.create(
+            name='Turkey',
+            slug='turkey',
+            description='Just a turkey',
+            stock=120,
+            price=15,
+            offer_price=9,
+            available=True)
+
+        self.p2 = Product.objects.create(
+            name='Protein Powder',
+            slug='protein-powder',
+            description='Protein powder.',
+            stock=120,
+            price=10,
+            offer_price=5,
+            available=True)        
+
+        self.p3 = Product.objects.create(
+            name='Worm',
+            slug='worm',
+            description='Uhhh, yeah, it\'s a worm...',
+            stock=120,
+            price=19,
+            offer_price=9.7,
+            available=True)        
 
     def _setup_memberships(self):
         self.m1 = Membership.objects.create(option=self.po_3, group=self.g4, default=False)
@@ -579,3 +608,23 @@ class ProductOptionProductMembershipTestCase(TestCase):
         
         count = len(Membership.objects.all())
         self.assertEqual(prev_count, count)
+
+    def test_product_retrival_from_product_group(self):
+        Membership.objects.create(group=self.g1, option=self.po_1)
+        Membership.objects.create(group=self.g1, option=self.po_2)
+        self.g1.products.add(self.p1, self.p2)
+        
+        products = self.g1.products.all()
+        self.assertEqual(len(products), 2)
+        self.assertCountEqual(products, (self.p1, self.p2))
+
+    def test_product_group_retrival_from_product(self):
+        Membership.objects.create(group=self.g1, option=self.po_1)
+        Membership.objects.create(group=self.g1, option=self.po_2)
+        self.g1.products.add(self.p1, self.p2)
+        self.g2.products.add(self.p1)
+
+        groups = self.p1.groups.all()
+        self.assertEqual(len(groups), 2)
+        self.assertCountEqual(groups, [self.g1, self.g2])
+

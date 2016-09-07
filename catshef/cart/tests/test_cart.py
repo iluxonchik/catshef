@@ -5,7 +5,8 @@ from decimal import Decimal
 from cart.cart import Cart
 from cart.exceptions import (ProductUnavailableException,
     NegativeQuantityException, ProductStockZeroException)
-from products.models import Product, ProductOption
+from products.models import (Product, ProductOption, ProductOptionGroup,
+    Membership)
 
 from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import AnonymousUser
@@ -155,6 +156,25 @@ class CartTestCase(TestCase):
         item_opt = self.cart._get_item(product=self.p1, options=[self.po1,
             self.po2])
         self.assertEqual(item_opt['quantity'], Decimal(1))
+
+    def test_product_with_empty_options_additon(self):
+        """
+        Make sure than when the options iterable is empty, products are
+        added to cart as expected (i.e. additions treated the same as if
+        they were done without any options passed).
+        """
+        self.assertEqual(len(self.cart), 0)
+        self.cart.add(product=self.p1, options=[], quantity=2)
+        self.assertEqual(len(self.cart), 2)
+        item = self.cart._get_item(self.p1, [])
+        self.assertIsNotNone(item)
+        self.assertEqual(item['quantity'], 2)
+
+        self.cart.add(product=self.p1, quantity=3)
+        self.assertEqual(len(self.cart), 5)
+        item = self.cart._get_item(self.p1)
+        self.assertIsNotNone(item)
+        self.assertEqual(item['quantity'], 5)
 
     def test_negative_quantity_addition(self):
         with self.assertRaises(NegativeQuantityException):
@@ -492,8 +512,97 @@ class CartTestCase(TestCase):
         self.assertEqual(self.cart.get_final_price_with_shipping(), Decimal(15))
         
         self.cart.add(self.p1, quantity=40)
-        self.assertEqual(self.cart.get_final_price_with_shipping(), Decimal(205))
+        self.assertEqual(self.cart.get_final_price_with_shipping(), 
+            Decimal(205))
 
+    def test_adding_repeated_option(self):
+        """
+        Make sure that repeated options are stored in the 'options' key
+        of item, when iterated.
+        """
+        options = [self.po1, self.po1, self.po1, self.po2, self.po2, self.po3]
+        self.cart.add(product=self.p1, options=options, quantity=2)
+        self.assertEqual(len(self.cart), 2)
+        for item in self.cart:
+            self.assertEqual(item['product'], self.p1)
+            self.assertCountEqual(item['options'], options)
+
+
+
+    def test_default_product_options_additon(self):
+        po1 = ProductOption.objects.create(name='some_opt_1', price=2)
+        po2 = ProductOption.objects.create(name='some_opt_2', price=2)
+        po3 = ProductOption.objects.create(name='some_opt_3', price=2)
+        po4 = ProductOption.objects.create(name='some_opt_4', price=2)
+
+        g1 = ProductOptionGroup.objects.create(name='SomeGroup1', 
+            type=ProductOptionGroup.RADIO)
+        g2 = ProductOptionGroup.objects.create(name='SomeGroup2', 
+            type=ProductOptionGroup.DROPDOWN)
+        g3 = ProductOptionGroup.objects.create(name='SomeGroup3', 
+            type=ProductOptionGroup.CHECKBOX)
+        g4 = ProductOptionGroup.objects.create(name='SomeGroup4', 
+            type=ProductOptionGroup.CHECKBOX)
+
+        Membership.objects.create(group=g1, option=po1, default=True)
+        Membership.objects.create(group=g1, option=po2, default=False)
+        g1.products.add(self.p1)
+
+        Membership.objects.create(group=g2, option=po1, default=True)
+        Membership.objects.create(group=g2, option=po3, default=False)
+        g2.products.add(self.p1)
+
+        Membership.objects.create(group=g3, option=po2, default=True)
+        g3.products.add(self.p1)
+        
+        Membership.objects.create(group=g4, option=po4)
+        g4.products.add(self.p1)
+
+        self.cart.add_with_default_options(self.p1)
+        default_options = (po1, po1, po2)
+
+        self.assertEqual(len(self.cart), 1)
+        item = self.cart._get_item(product=self.p1, options=default_options)
+        self.assertIsNotNone(item)
+        self.assertEqual(item['total_options_price'], Decimal(6))
+        self.assertEqual(item['total_final_price'], Decimal(11))
+
+        self.cart.add_with_default_options(self.p1, quantity=3)
+        self.assertEqual(len(self.cart), 4)
+        item = self.cart._get_item(product=self.p1, options=default_options)
+        self.assertIsNotNone(item)
+        self.assertEqual(item['total_options_price'], Decimal(6))
+        self.assertEqual(item['total_final_price'], Decimal(44))
+
+        self.cart.add_with_default_options(self.p1, quantity=5,
+            update_quantity=True)
+        self.assertEqual(len(self.cart), 5)
+        item = self.cart._get_item(product=self.p1, options=default_options)
+        self.assertIsNotNone(item)
+        self.assertEqual(item['total_options_price'], Decimal(6))
+        self.assertEqual(item['total_final_price'], Decimal(55))
+
+        # Let's add a product with no default options
+        self.cart.add_with_default_options(self.p2, quantity=3)  # adds 0.12 * 3
+        self.assertEqual(len(self.cart), 8)
+        item = self.cart._get_item(self.p2)
+        self.assertEqual(item['quantity'], 3)
+        self.assertEqual(item['total_options_price'], 0)
+        
+        items = [item for item in self.cart]
+        self.assertEqual(len(items), 2)
+
+        for item in items:
+            if item['quantity'] == 5:
+                self.assertEqual(item['product'], self.p1)
+                self.assertCountEqual(item['options'], default_options)
+            elif item['quantity'] == 3:
+                self.assertEqual(item['product'], self.p2)
+                with self.assertRaises(KeyError):
+                    item['options']
+            else:
+                self.fail('Unexpected item quantity in cart')
+        
     def test_coupon_discount(self):
         # TODO: when coupons are implemented
         # test savings from coupon
@@ -520,3 +629,4 @@ class CartTestCase(TestCase):
             self._price_prod_3()
         self.cart.add(product=self.p5,
             options=(self.po4,), quantity=4)  # adds 28.96
+
