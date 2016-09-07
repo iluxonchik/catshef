@@ -11,6 +11,13 @@ from products.models import Product, ProductOption
 
 class Cart(object):
     SESSION_ID = getattr(settings, 'CART_SESSION_ID', 'catshef.cart')
+    # minimum total order price to qualify for free shipping
+    FREE_SHIPPING_MIN_PRICE = to_decimal(getattr(settings, 
+        'MIN_FREE_SHIPPING_PRICE', 30))
+    # default price of shipping if MIN_FREE_SHIPPING_PRICE has not yet been 
+    # reached
+    DEFAULT_SHIPPING_PRICE = to_decimal(getattr(settings,
+        'DEFAULT_SHIPPING_PRICE', 10))
 
     KEY_SEPARATOR = ':'
 
@@ -50,6 +57,8 @@ class Cart(object):
             # only add up to the available stock
             quantity = product.stock
 
+
+        final_price_needs_update = True
         product_id = str(product.pk)
 
         # let's build the key
@@ -65,11 +74,16 @@ class Cart(object):
             # them) is being added to the cart
             cart_product[key] = self._init_cart_product(product,
                 options, quantity)
+            final_price_needs_update = False
 
         if update_quantity:
             cart_product[key]['quantity'] = quantity
         else:
             cart_product[key]['quantity'] += quantity
+
+        if final_price_needs_update:
+            self._update_product_total_final_price(product, options)
+
         self.save()
 
     def remove(self, product, options=None):
@@ -139,6 +153,39 @@ class Cart(object):
         res = Decimal(100) - (Decimal(self.get_final_price()) * Decimal(100) / 
             Decimal(self.get_original_price()))
         return round_decimal(res)
+
+    def get_shipping_price(self):
+        """
+        Get the shipping price, considering the total price of the cart.
+        """
+        if len(self) < 1:
+            return Decimal(0)
+
+        final_price = self.get_final_price()
+
+        return (0 if final_price >= Cart.FREE_SHIPPING_MIN_PRICE 
+                 else Cart.DEFAULT_SHIPPING_PRICE)
+
+    def get_final_price_with_shipping(self):
+        """
+        Get the total price of the cart, including possible shipping costs. 
+        """
+        return self.get_final_price() + self.get_shipping_price()
+
+    def _update_product_total_final_price(self, product, options=None):
+        """
+        Updates the passed in product's (with possible options) item in cart
+        context. NOTE: THIS METHOD MODIFIES THE CART DICTIONARY. It does NOT
+        save the cart.
+        """
+        item = self._get_item(product, options)
+        item['total_final_price'] = self._compute_total_final_price(product,
+                                                                        item)
+
+    def _compute_total_final_price(self, product, item):
+        return round_decimal((product.current_price 
+                                    + item['total_options_price'])
+                                    * item['quantity'])
 
     def _get_product_with_options_key(self, options):
         option_ids = sorted([option.pk for option in options])
