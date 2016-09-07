@@ -268,11 +268,13 @@ class Membership(models.Model):
     Through model for ProductOptionGroup to ProductOption many-to-many
     relationship.
 
-    This model is here, to allow for easier extension if needed later.
+    Fields:
+        default (BooelanField): if True, this option is selected by default
     """
     group = models.ForeignKey('ProductOptionGroup', on_delete=models.CASCADE)
     option = models.ForeignKey('ProductOption',
         related_name='membership', on_delete=models.CASCADE)
+    default = models.BooleanField(default=False, blank=True)
 
 class ProductOption(models.Model):
     DECIMAL_PLACES = 2  # decimal_places argument of models.DecimalField

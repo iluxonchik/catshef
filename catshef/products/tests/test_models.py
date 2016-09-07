@@ -513,10 +513,13 @@ class ProductOptionProductMembershipTestCase(TestCase):
             type=ProductOptionGroup.CHECKBOX)
         self.g3 = ProductOptionGroup.objects.create(name='group_3',
             type=ProductOptionGroup.DROPDOWN, description='Group 3')
+        self.g4 = ProductOptionGroup.objects.create(name='group_4',
+            type=ProductOptionGroup.RADIO)
 
     def _setup_memberships(self):
-        Membership.objects.create(option=self.po_1, group=self.g1)
-        Membership.objects.create(option=self.po_2, group=self.g1)
+        self.m1 = Membership.objects.create(option=self.po_3, group=self.g4, default=False)
+        self.m2 = Membership.objects.create(option=self.po_1, group=self.g1, default=True)
+        self.m3 = Membership.objects.create(option=self.po_2, group=self.g1)
 
 
     def test_from_product_option_retrival(self):
@@ -529,3 +532,13 @@ class ProductOptionProductMembershipTestCase(TestCase):
         opt = ProductOptionGroup.objects.filter(options__name='option_1')
         self.assertEqual(len(opt), 1)
         self.assertEqual(opt[0], self.g1)
+
+    def test_membership_retrival(self):
+        m1 = Membership.objects.filter(option=self.po_3, group=self.g4)
+        self.assertIn(self.m1, m1)
+
+        m2 = Membership.objects.filter(option=self.po_1, group=self.g1)
+        self.assertIn(self.m2, m2)
+
+        m3 = Membership.objects.filter(option=self.po_2, group=self.g1)
+        self.assertIn(self.m3, m3)
