@@ -516,6 +516,11 @@ class ProductOptionProductMembershipTestCase(TestCase):
         self.g4 = ProductOptionGroup.objects.create(name='group_4',
             type=ProductOptionGroup.RADIO)
 
+        self.g5 = ProductOptionGroup.objects.create(name='group_5',
+            type=ProductOptionGroup.RADIO)
+        self.g6 = ProductOptionGroup.objects.create(name='group_6',
+            type=ProductOptionGroup.DROPDOWN)
+
     def _setup_memberships(self):
         self.m1 = Membership.objects.create(option=self.po_3, group=self.g4, default=False)
         self.m2 = Membership.objects.create(option=self.po_1, group=self.g1, default=True)
@@ -536,9 +541,41 @@ class ProductOptionProductMembershipTestCase(TestCase):
     def test_membership_retrival(self):
         m1 = Membership.objects.filter(option=self.po_3, group=self.g4)
         self.assertIn(self.m1, m1)
+        self.assertEqual(len(m1), 1)
+        self.assertEqual(m1[0].default, False)
 
         m2 = Membership.objects.filter(option=self.po_1, group=self.g1)
         self.assertIn(self.m2, m2)
+        self.assertEqual(len(m2), 1)
+        self.assertEqual(m2[0].default, True)
 
         m3 = Membership.objects.filter(option=self.po_2, group=self.g1)
         self.assertIn(self.m3, m3)
+        self.assertEqual(len(m3), 1)
+        self.assertEqual(m3[0].default, False)
+
+    def test_radio_default_restrictions(self):
+        Membership.objects.create(group=self.g5, option=self.po_1)
+        Membership.objects.create(group=self.g5, 
+            option=self.po_2, default=True)
+        prev_count = len(Membership.objects.all())
+        
+        with self.assertRaises(exceptions.ValidationError):
+            Membership.objects.create(group=self.g5, 
+                option=self.po_3, default=True)
+        
+        count = len(Membership.objects.all())
+        self.assertEqual(prev_count, count)
+
+    def test_dropdown_default_restrictions(self):
+        Membership.objects.create(group=self.g6, option=self.po_1)
+        Membership.objects.create(group=self.g6,
+            option=self.po_2, default=True)
+        prev_count = len(Membership.objects.all())
+
+        with self.assertRaises(exceptions.ValidationError):
+            Membership.objects.create(group=self.g6, 
+                option=self.po_3, default=True)
+        
+        count = len(Membership.objects.all())
+        self.assertEqual(prev_count, count)
