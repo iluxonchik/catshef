@@ -433,32 +433,66 @@ class CartTestCase(TestCase):
             self.assertCountEqual(item['options'], [self.po1, self.po2])
             self.assertEqual(item['total_options_price'], Decimal('15.45'))
         
+    def test_quantity_updates_update_final_price(self):
+        self.assertEqual(self.cart.get_final_price(), Decimal(0))
+
+        self.cart.add(self.p1, quantity=1)
+        item = self.cart._get_item(self.p1, options=None)
+        self.assertEqual(item['total_final_price'], Decimal(5))
+        self.assertEqual(self.cart.get_final_price(), Decimal(5))
+
+        self.cart.add(self.p1, quantity=5)
+        item = self.cart._get_item(self.p1, options=None)
+        self.assertEqual(item['total_final_price'], Decimal(30))
+        self.assertEqual(self.cart.get_final_price(), Decimal(30))
+
+        self.cart.add(self.p1, quantity=8, update_quantity=True)
+        item = self.cart._get_item(self.p1, options=None)
+        self.assertEqual(item['total_final_price'], Decimal(40))
+        self.assertEqual(self.cart.get_final_price(), Decimal(40))
+
+        self.cart.add(self.p1, options=(self.po1, self.po2))
+        item = self.cart._get_item(self.p1, options=(self.po1, self.po2))
+        self.assertEqual(item['total_final_price'], Decimal('20.45'))
+        self.assertEqual(self.cart.get_final_price(), Decimal('60.45'))
+
+        self.cart.add(self.p1, options=(self.po1, self.po2), quantity=3)
+        item = self.cart._get_item(self.p1, options=(self.po1, self.po2))
+        self.assertEqual(item['total_final_price'], Decimal('81.80'))
+        self.assertEqual(self.cart.get_final_price(), Decimal('121.80'))
+        
+        self.cart.add(self.p1, options=(self.po1, self.po2),
+                                        quantity=3, update_quantity=True)
+        item = self.cart._get_item(self.p1, options=(self.po1, self.po2))
+        self.assertEqual(item['total_final_price'], Decimal('61.35'))
+        self.assertEqual(self.cart.get_final_price(), Decimal('101.35'))
 
     def test_shipping_price(self):
         self.cart.DEFAULT_SHIPPING_PRICE = 10
         self.cart.FREE_SHIPPING_MIN_PRICE = 50
 
         self.assertEqual(len(self.cart), 0)
-        self.assertEqual(self.cart.get_shipping_price(), 0)
+        self.assertEqual(self.cart.get_shipping_price(), Decimal(0))
 
         self.cart.add(self.p1, quantity=1)
-        self.assertEqual(self.cart.get_shipping_price(), 10)
+        self.assertEqual(self.cart.get_shipping_price(), Decimal(10))
         
         self.cart.add(self.p1, quantity=40)
+        import pdb; pdb.set_trace()
         self.assertEqual(self.cart.get_shipping_price(), 0)
     
     def test_final_price_with_shipping(self):
-        self.cart.DEFAULT_SHIPPING_PRICE = 10
-        self.cart.FREE_SHIPPING_MIN_PRICE = 50
+        self.cart.DEFAULT_SHIPPING_PRICE = Decimal(10)
+        self.cart.FREE_SHIPPING_MIN_PRICE = Decimal(50)
 
         self.assertEqual(len(self.cart), 0)
-        self.assertEqual(self.cart.get_final_price_with_shipping(), 0)
+        self.assertEqual(self.cart.get_final_price_with_shipping(), Decimal(0))
 
         self.cart.add(self.p1, quantity=1)
-        self.assertEqual(self.cart.get_final_price_with_shipping(), 20)
+        self.assertEqual(self.cart.get_final_price_with_shipping(), Decimal(20))
         
         self.cart.add(self.p1, quantity=40)
-        self.assertEqual(self.cart.get_final_price_with_shipping(), 205)
+        self.assertEqual(self.cart.get_final_price_with_shipping(), Decimal(205))
 
 
     def test_coupon_discount(self):
