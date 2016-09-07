@@ -7,7 +7,7 @@ from cart.exceptions import (NegativeQuantityException,
 from products.utils.conversion import round_decimal, to_decimal
 
 from django.conf import settings
-from products.models import Product, ProductOption
+from products.models import Product, ProductOption, Membership
 
 class Cart(object):
     SESSION_ID = getattr(settings, 'CART_SESSION_ID', 'catshef.cart')
@@ -85,6 +85,24 @@ class Cart(object):
             self._update_product_total_final_price(product, options)
 
         self.save()
+
+    def add_with_default_options(self, product, 
+                                        quantity=1, update_quantity=False):
+        """
+        Adds the product to the cart with all of its default options, in all
+        groups which relate to this product.
+        """
+        options = []
+        groups = product.groups.all()
+        for group in groups:
+            # get all memberships with that group that are "default"
+            memberships = Membership.objects.filter(group=group, default=True)
+            for m in memberships:
+                options.append(m.option)
+
+        self.add(product=product, options=options, 
+            quantity=quantity, update_quantity=update_quantity)
+
 
     def remove(self, product, options=None):
         key = self._get_product_key(options)
@@ -224,7 +242,10 @@ class Cart(object):
             # init options if needed
             option_ids = key.split(Cart.KEY_SEPARATOR)
             option_ids = [int(id) for id in option_ids]
-            options = ProductOption.objects.filter(pk__in=option_ids)
+            # NOTE: not using ProductOption.objects.filter(pk__in=option_ids),
+            # because **we want duplicates** to appear in the options list
+            # (case if a product is added with the same option repeated)
+            options = [ProductOption.objects.get(pk=pk) for pk in option_ids]
             new_context['options'] = options
         
         total_original_price = round_decimal((product.price 
