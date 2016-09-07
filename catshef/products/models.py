@@ -276,6 +276,24 @@ class Membership(models.Model):
         related_name='membership', on_delete=models.CASCADE)
     default = models.BooleanField(default=False, blank=True)
 
+    def clean(self):
+        if self.group.type in (ProductOptionGroup.RADIO, ProductOptionGroup.DROPDOWN):
+            if self.default == True:
+                if Membership.objects.filter(group=self.group,
+                    default=True).exists():
+                    raise exceptions.ValidationError('This group already has '
+                        'one field with default set to True.')
+
+    def save(self, *args, **kwargs):
+        # NOTE: won't work for bulk object creation, since save() isn't called
+        # then, as per Django's docs:
+        # "Unfortunately, there isn’t a workaround when creating or updating 
+        # objects in bulk, since none of save(), pre_save, and post_save are 
+        # called." : https://docs.djangoproject.com/en/1.10/topics/db/models/#overriding-model-methods
+        self.full_clean()  # full_clean() calls clean()
+        super(Membership, self).save(*args, **kwargs)
+
+
 class ProductOption(models.Model):
     DECIMAL_PLACES = 2  # decimal_places argument of models.DecimalField
 
