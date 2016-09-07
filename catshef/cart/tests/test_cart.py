@@ -478,7 +478,7 @@ class CartTestCase(TestCase):
         self.assertEqual(self.cart.get_shipping_price(), Decimal(10))
         
         self.cart.add(self.p1, quantity=40)
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         self.assertEqual(self.cart.get_shipping_price(), 0)
     
     def test_final_price_with_shipping(self):
@@ -489,11 +489,10 @@ class CartTestCase(TestCase):
         self.assertEqual(self.cart.get_final_price_with_shipping(), Decimal(0))
 
         self.cart.add(self.p1, quantity=1)
-        self.assertEqual(self.cart.get_final_price_with_shipping(), Decimal(20))
+        self.assertEqual(self.cart.get_final_price_with_shipping(), Decimal(15))
         
         self.cart.add(self.p1, quantity=40)
         self.assertEqual(self.cart.get_final_price_with_shipping(), Decimal(205))
-
 
     def test_coupon_discount(self):
         # TODO: when coupons are implemented
