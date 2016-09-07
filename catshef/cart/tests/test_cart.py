@@ -9,6 +9,7 @@ from products.models import Product, ProductOption
 
 from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import AnonymousUser
+from django.conf import settings
 
 class SessionDict(dict):
     """
@@ -433,7 +434,33 @@ class CartTestCase(TestCase):
             self.assertEqual(item['total_options_price'], Decimal('15.45'))
         
 
+    def test_shipping_price(self):
+        self.cart.DEFAULT_SHIPPING_PRICE = 10
+        self.cart.FREE_SHIPPING_MIN_PRICE = 50
+
+        self.assertEqual(len(self.cart), 0)
+        self.assertEqual(self.cart.get_shipping_price(), 0)
+
+        self.cart.add(self.p1, quantity=1)
+        self.assertEqual(self.cart.get_shipping_price(), 10)
+        
+        self.cart.add(self.p1, quantity=40)
+        self.assertEqual(self.cart.get_shipping_price(), 0)
     
+    def test_final_price_with_shipping(self):
+        self.cart.DEFAULT_SHIPPING_PRICE = 10
+        self.cart.FREE_SHIPPING_MIN_PRICE = 50
+
+        self.assertEqual(len(self.cart), 0)
+        self.assertEqual(self.cart.get_final_price_with_shipping(), 0)
+
+        self.cart.add(self.p1, quantity=1)
+        self.assertEqual(self.cart.get_final_price_with_shipping(), 20)
+        
+        self.cart.add(self.p1, quantity=40)
+        self.assertEqual(self.cart.get_final_price_with_shipping(), 205)
+
+
     def test_coupon_discount(self):
         # TODO: when coupons are implemented
         # test savings from coupon
