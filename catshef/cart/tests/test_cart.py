@@ -122,6 +122,12 @@ class CartTestCase(TestCase):
         p1_item = self.cart._get_item(product=self.p1)
         self.assertEqual(p1_item['quantity'], Decimal(99))
 
+        # make sure that non-ints get coerced to int
+        self.cart.add(product=self.p1, quantity=3.14, update_quantity=False)
+        self.assertEqual(len(self.cart), 103)
+        p1_item = self.cart._get_item(product=self.p1)
+        self.assertEqual(p1_item['quantity'], Decimal(102))
+
     def test_product_with_options_addition(self):
         self.assertEqual(len(self.cart), 0)
         self.cart.add(product=self.p1, options=(self.po1, self.po2),
@@ -629,4 +635,3 @@ class CartTestCase(TestCase):
             self._price_prod_3()
         self.cart.add(product=self.p5,
             options=(self.po4,), quantity=4)  # adds 28.96
-

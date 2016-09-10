@@ -36,6 +36,8 @@ class Cart(object):
         self._cart = cart
 
     def add(self, product, options=None, quantity=1, update_quantity=False):
+        quantity = int(quantity)  # safeguard
+
         if quantity < 0:
             raise NegativeQuantityException('\'quantity\' cannot be negative. '
                 'The passed in value was {}'.format(quantity))
