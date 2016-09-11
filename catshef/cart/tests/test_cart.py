@@ -248,6 +248,25 @@ class CartTestCase(TestCase):
         self.cart.remove(product=self.p4)
         self.assertEqual(prev_raw_cart, self.cart._raw_cart)
 
+    def test_quantity_zero_update_removes_product(self):
+        """
+        Make sure that when a product is added with quantity=0 and
+        update_quantity=True, it is removed from the cart.
+        """
+        self.assertIsNone(self.cart._get_item(product=self.p1,
+            options=[self.po1, self.po2, self.po3]))
+
+        self.cart.add(product=self.p1, options=(self.po1, self.po2, self.po3))
+
+        self.assertIsNotNone(self.cart._get_item(product=self.p1,
+            options=[self.po1, self.po2, self.po3]))
+
+        self.cart.add(product=self.p1, options=[self.po1, self.po2, self.po3],
+            quantity=0, update_quantity=True)
+        
+        self.assertIsNone(self.cart._get_item(product=self.p1,
+            options=[self.po1, self.po2, self.po3]))
+
     def test_over_stock_additon(self):
         """
         Test the follwoing behaviour:

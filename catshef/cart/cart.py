@@ -36,12 +36,32 @@ class Cart(object):
         self._cart = cart
 
     def add(self, product, options=None, quantity=1, update_quantity=False):
+        """
+        Adds prodcut `product` with the specified `options`(if applies)
+        to the cart.
+
+        Args:
+            product (Product): the product to add
+            options (ProductOption iterable): [optional] 
+                product options (defaults to None)
+            quantity (int): quantity to add
+                update_quantity (bool): if True, quantity will be updated (*i.e*
+                set to the quantity passed in argument `quantity`), if False and
+                the product is already in cart, its quantity will be incremented by
+                the `quantity` argument.
+
+            NOTE: if update_quantity=True and quantity=0, the product will
+            be **removed** from the cart: the **remove()** method will be
+            called.
+        """
         quantity = int(quantity)  # safeguard
 
         if quantity < 0:
             raise NegativeQuantityException('\'quantity\' cannot be negative. '
                 'The passed in value was {}'.format(quantity))
         if quantity == 0:
+            if update_quantity:
+                self.remove(product=product, options=options)
             # if the added quantity is zero, just ignore the addition(no effect)
             return
 
