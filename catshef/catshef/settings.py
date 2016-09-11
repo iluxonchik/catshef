@@ -79,6 +79,7 @@ TEMPLATES = [
                 'products.context_processors.site_name',
                 'products.context_processors.login_modal_form',
                 'account.context_processors.snackbar_data',
+                'cart.context_processors.cart',
             ],
         },
     },
@@ -142,6 +143,7 @@ LOGIN_URL = '/account/login/'  # TODO: decide on url
 INSTALLED_APPS += [
     'cart',
 ]
+CART_SESSION_ID = 'catshef.cart'
 
 # django-allauth settings
 AUTHENTICATION_BACKENDS += (
