@@ -1,12 +1,14 @@
 from django.test import TestCase
 from django.contrib.auth.models import AnonymousUser
+from django.http import Http404
 
 from cart.tests.test_cart import SessionDict
+from catshef.exceptions import ArgumentError
 
 from cart.cart import Cart
 from products.models import (Product, ProductOption, ProductOptionGroup,
     Membership)
-from cart.utils import add_item_build_json_response
+from cart.utils import add_item_build_json_response, parse_POST
 
 class RequestMock(object):
     """
@@ -15,6 +17,7 @@ class RequestMock(object):
     def __init__(self):
         self.session = SessionDict()
         self.user = AnonymousUser()
+        self.POST = {}
 
 class UtilsTestCase(TestCase):
     def setUp(self):
@@ -83,3 +86,65 @@ class UtilsTestCase(TestCase):
         item = add_item_build_json_response(self.cart, product=self.p1, 
             options=[self.po1])
         self.assertEqual(expected, item)
+
+    def test_parse_POST(self):
+        self.request.POST['product_pk'] = 1
+        self.request.POST['options_pks'] = [1,2]
+        self.request.POST['quantity'] = 22
+        self.request.POST['update_quantity'] = True
+
+        res = parse_POST(self.request)
+        self.assertEqual(res['product'], self.p1)
+        self.assertCountEqual(res['options'], [self.po1, self.po2])
+        self.assertEqual(res['quantity'], 22)
+        self.assertEqual(res['update_quantity'], True)
+        self.assertEqual(res['add_with_default_options'], False)
+
+        self.request.POST = {}
+        self.request.POST['product_pk'] = 1
+        self.request.POST['options_pks'] = []
+        self.request.POST['quantity'] = 22
+
+        res = parse_POST(self.request)
+        self.assertEqual(res['product'], self.p1)
+        self.assertCountEqual(res['options'], [])
+        self.assertEqual(res['quantity'], 22)
+        self.assertEqual(res['update_quantity'], False)
+        self.assertEqual(res['add_with_default_options'], False)
+
+        self.request.POST = {}
+        self.request.POST['product_pk'] = 1
+
+        res = parse_POST(self.request)
+        self.assertEqual(res['product'], self.p1)
+        
+        self.assertIsNone(res['options'])
+
+        self.assertEqual(res['quantity'], 1)
+        self.assertEqual(res['update_quantity'], False)
+        self.assertEqual(res['add_with_default_options'], True)
+
+    def test_parse_POST_errors(self):
+        with self.assertRaises(Http404):
+            self.request.POST['product_pk'] = 22
+            self.request.POST['options_pks'] = [1,2]
+            self.request.POST['quantity'] = 22
+            self.request.POST['update_quantity'] = True
+
+            res = parse_POST(self.request)
+        
+        with self.assertRaises(Http404):
+            self.request.POST['product_pk'] = 22
+            self.request.POST['options_pks'] = [99,2]
+            self.request.POST['quantity'] = 22
+            self.request.POST['update_quantity'] = True
+
+            res = parse_POST(self.request)
+
+        with self.assertRaises(ArgumentError):
+            self.request.POST['product_pk'] = 1
+            self.request.POST['options_pks'] = 'Hello, World!'
+            self.request.POST['quantity'] = 22
+            self.request.POST['update_quantity'] = True
+
+            res = parse_POST(self.request)

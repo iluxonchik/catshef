@@ -1,3 +1,11 @@
+import collections
+
+from cart.exceptions import QueryParamsError
+from catshef.exceptions import ArgumentError
+
+from products.models import Product, ProductOption
+
+from django.shortcuts import get_object_or_404
 from decimal import Decimal
 
 def add_item_build_json_response(cart, product, options=[]):
@@ -18,5 +26,37 @@ def add_item_build_json_response(cart, product, options=[]):
         res['quantity'] = 0
         res['total_options_price'] = 0
         res['total_final_price'] = 0
+
+    return res
+
+def parse_POST(request):
+    """
+    Parse post args and retrieve the related product and options (if applies).
+    """
+    res = { 'add_with_default_options' : False }
+    product_pk = request.POST.get('product_pk')
+    
+    if product_pk is None:
+        raise QueryParamsError('product_pk not provided')
+
+    res['product'] = get_object_or_404(Product, pk=product_pk)
+
+    options_pks = request.POST.get('options_pks')
+
+    if options_pks is not None:
+        # if it's None, then the product will be added with defaults
+        if not isinstance(options_pks, collections.Iterable):
+            raise ArgumentError('option_pks must be an iterable')
+        if isinstance(options_pks, str):
+            raise ArgumentError('options_pks cannot be a string, it must be a '
+                'different type of iterable, such as a list or a tuple')
+        res['options'] = [get_object_or_404(ProductOption, pk=pk) 
+                                                        for pk in options_pks]
+    else:
+        # options were not passed, not even an empty list, so add with defaults
+        res['add_with_default_options'] = True
+
+    res['quantity'] = request.POST.get('quantity', 1)
+    res['update_quantity'] = request.POST.get('update_quantity', False)
 
     return res
