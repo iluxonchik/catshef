@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth.models import AnonymousUser
 from django.http import Http404
+from django.http.request import QueryDict
 
 from cart.tests.test_cart import SessionDict
 from catshef.exceptions import ArgumentError
@@ -17,7 +18,7 @@ class RequestMock(object):
     def __init__(self):
         self.session = SessionDict()
         self.user = AnonymousUser()
-        self.POST = {}
+        self.POST = QueryDict(mutable=True)
 
 class UtilsTestCase(TestCase):
     def setUp(self):
@@ -89,7 +90,7 @@ class UtilsTestCase(TestCase):
 
     def test_parse_POST(self):
         self.request.POST['product_pk'] = 1
-        self.request.POST['options_pks'] = [1,2]
+        self.request.POST.setlist('options_pks', [1,2])
         self.request.POST['quantity'] = 22
         self.request.POST['update_quantity'] = True
 
@@ -100,9 +101,9 @@ class UtilsTestCase(TestCase):
         self.assertEqual(res['update_quantity'], True)
         self.assertEqual(res['add_with_default_options'], False)
 
-        self.request.POST = {}
+        self.request.POST = QueryDict(mutable=True)
         self.request.POST['product_pk'] = 1
-        self.request.POST['options_pks'] = []
+        self.request.POST.setlist('options_pks', [])
         self.request.POST['quantity'] = 22
 
         res = parse_POST(self.request)
@@ -112,7 +113,7 @@ class UtilsTestCase(TestCase):
         self.assertEqual(res['update_quantity'], False)
         self.assertEqual(res['add_with_default_options'], False)
 
-        self.request.POST = {}
+        self.request.POST = QueryDict(mutable=True)
         self.request.POST['product_pk'] = 1
 
         res = parse_POST(self.request)
@@ -127,7 +128,7 @@ class UtilsTestCase(TestCase):
     def test_parse_POST_errors(self):
         with self.assertRaises(Http404):
             self.request.POST['product_pk'] = 22
-            self.request.POST['options_pks'] = [1,2]
+            self.request.POST.setlist('options_pks', [1,2])
             self.request.POST['quantity'] = 22
             self.request.POST['update_quantity'] = True
 
@@ -135,16 +136,9 @@ class UtilsTestCase(TestCase):
         
         with self.assertRaises(Http404):
             self.request.POST['product_pk'] = 22
-            self.request.POST['options_pks'] = [99,2]
+            self.request.POST.setlist('options_pks', [99,2])
             self.request.POST['quantity'] = 22
             self.request.POST['update_quantity'] = True
 
             res = parse_POST(self.request)
 
-        with self.assertRaises(ArgumentError):
-            self.request.POST['product_pk'] = 1
-            self.request.POST['options_pks'] = 'Hello, World!'
-            self.request.POST['quantity'] = 22
-            self.request.POST['update_quantity'] = True
-
-            res = parse_POST(self.request)

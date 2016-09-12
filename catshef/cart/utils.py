@@ -41,19 +41,21 @@ def parse_POST(request):
 
     res['product'] = get_object_or_404(Product, pk=product_pk)
 
-    options_pks = request.POST.get('options_pks')
+    # a little hack, since you can't instruct getlist() to return None,
+    # -1 here acts as a None 
+    options_pks = request.POST.getlist('options_pks', -1)
+    if options_pks == -1:
+        options_pks = None
 
     if options_pks is not None:
         # if it's None, then the product will be added with defaults
         if not isinstance(options_pks, collections.Iterable):
             raise ArgumentError('option_pks must be an iterable')
-        if isinstance(options_pks, str):
-            raise ArgumentError('options_pks cannot be a string, it must be a '
-                'different type of iterable, such as a list or a tuple')
         res['options'] = [get_object_or_404(ProductOption, pk=pk) 
-                                                        for pk in options_pks]
+                                                    for pk in options_pks]
     else:
         # options were not passed, not even an empty list, so add with defaults
+        res['options'] = None  # avoids ifs in view
         res['add_with_default_options'] = True
 
     res['quantity'] = request.POST.get('quantity', 1)
