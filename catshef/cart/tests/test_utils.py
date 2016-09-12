@@ -103,7 +103,7 @@ class UtilsTestCase(TestCase):
 
         self.request.POST = QueryDict(mutable=True)
         self.request.POST['product_pk'] = 1
-        self.request.POST.setlist('options_pks', [])
+        self.request.POST['options_pks'] = ''
         self.request.POST['quantity'] = 22
 
         res = parse_POST(self.request)

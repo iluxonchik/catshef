@@ -46,6 +46,11 @@ def parse_POST(request):
     options_pks = request.POST.getlist('options_pks', -1)
     if options_pks == -1:
         options_pks = None
+    else:
+        if len(options_pks) == 1 and options_pks[0] == '':
+            # if request.POST['option_pks'] contains '', it means that the product
+            # is beign added without options EXPLICITLY
+            options_pks = []
 
     if options_pks is not None:
         # if it's None, then the product will be added with defaults
