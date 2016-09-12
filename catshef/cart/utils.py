@@ -8,6 +8,53 @@ from products.models import Product, ProductOption
 from django.shortcuts import get_object_or_404
 from decimal import Decimal
 
+def _parse_int(value, name='value'):
+    try:
+       value = int(value)
+    except ValueError:
+        raise ArgumentError('{} must be an int '
+                        '(or something that can be coerced to it)'.format(name))
+    return value
+
+def _parse_bool(value, name='value'):
+    """
+    Parses boolean value from its POST data representation.
+    If parsing fails, it raises a value error.
+
+    Accepted values for bool: 
+    * 'True', 'true', '1' --> return True
+    * 'False', 'false', '0' --> return False
+    Anything else raises ArgumentError.
+
+    Reasoning behind muliple values for each bool: easily usible from
+    Python ('True'/'False'), JavaScript ('true', 'false') and by other
+    languages in general ('0'/'1' and 0/1)
+    """
+    # NOTE: yes, not the best code, but in a hurry. It's pretty straighforward,
+    # though.
+    res = False  # just initializing
+    if isinstance(value, str):
+        if value in ('True', 'true', '1'):
+            res = True
+        elif value in ('False', 'false', '0'):
+            res = False
+    else:
+        try:
+            num = int(value)
+            if num == 1:
+                res = True
+            elif num == 0:
+                res = False
+            else:
+                raise ArgumentError('Invalid int value "{}"" for bool "{}"'.
+                    format(value, name))
+        except ValueError:
+            raise ArgumentError('Value "{}" for bool "{}"" is invalid'.
+                format(value, name))
+    return res
+
+
+
 def add_item_build_json_response(cart, product, options=[]):
     """
     Builds JSON response for items added to cart. If the item sepcified by
@@ -36,6 +83,8 @@ def parse_POST(request):
     res = { 'add_with_default_options' : False }
     product_pk = request.POST.get('product_pk')
     
+    product_pk = _parse_int(product_pk, 'product_pk')
+
     if product_pk is None:
         raise QueryParamsError('product_pk not provided')
 
@@ -63,7 +112,9 @@ def parse_POST(request):
         res['options'] = None  # avoids ifs in view
         res['add_with_default_options'] = True
 
-    res['quantity'] = request.POST.get('quantity', 1)
-    res['update_quantity'] = request.POST.get('update_quantity', False)
+    quantity = request.POST.get('quantity', 1)
+    res['quantity'] = _parse_int(quantity)
+    update_quantity = request.POST.get('update_quantity', False)
+    res['update_quantity'] = _parse_bool(update_quantity, 'update_quantity')
 
     return res
