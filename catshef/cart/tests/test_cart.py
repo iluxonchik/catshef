@@ -15,7 +15,11 @@ from django.conf import settings
 class SessionDict(dict):
     """
     Used to mock the session. It's a dict with an additional 'modified' bool 
-    attribute
+    attribute.
+
+    I'm aware that you shouldn't inherit from dict directly, but rather from
+    UserDict, this is however, is used for mocking and does not override any
+    methods.
     """
     modified = False
 
@@ -121,6 +125,12 @@ class CartTestCase(TestCase):
         self.assertEqual(len(self.cart), 100)
         p1_item = self.cart._get_item(product=self.p1)
         self.assertEqual(p1_item['quantity'], Decimal(99))
+
+        # make sure that non-ints get coerced to int
+        self.cart.add(product=self.p1, quantity=3.14, update_quantity=False)
+        self.assertEqual(len(self.cart), 103)
+        p1_item = self.cart._get_item(product=self.p1)
+        self.assertEqual(p1_item['quantity'], Decimal(102))
 
     def test_product_with_options_addition(self):
         self.assertEqual(len(self.cart), 0)
@@ -241,6 +251,25 @@ class CartTestCase(TestCase):
         
         self.cart.remove(product=self.p4)
         self.assertEqual(prev_raw_cart, self.cart._raw_cart)
+
+    def test_quantity_zero_update_removes_product(self):
+        """
+        Make sure that when a product is added with quantity=0 and
+        update_quantity=True, it is removed from the cart.
+        """
+        self.assertIsNone(self.cart._get_item(product=self.p1,
+            options=[self.po1, self.po2, self.po3]))
+
+        self.cart.add(product=self.p1, options=(self.po1, self.po2, self.po3))
+
+        self.assertIsNotNone(self.cart._get_item(product=self.p1,
+            options=[self.po1, self.po2, self.po3]))
+
+        self.cart.add(product=self.p1, options=[self.po1, self.po2, self.po3],
+            quantity=0, update_quantity=True)
+        
+        self.assertIsNone(self.cart._get_item(product=self.p1,
+            options=[self.po1, self.po2, self.po3]))
 
     def test_over_stock_additon(self):
         """
@@ -629,4 +658,3 @@ class CartTestCase(TestCase):
             self._price_prod_3()
         self.cart.add(product=self.p5,
             options=(self.po4,), quantity=4)  # adds 28.96
-

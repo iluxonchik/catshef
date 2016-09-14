@@ -18,6 +18,7 @@ from django.contrib import admin
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'account/', include('account.urls')),
+    url(r'^account/', include('account.urls')),
+    url(r'^cart/', include('cart.urls', namespace='cart')),
     url(r'^', include('products.urls', namespace='products')),
 ]
