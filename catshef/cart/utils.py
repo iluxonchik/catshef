@@ -1,12 +1,15 @@
 import collections
+from decimal import Decimal
 
-from cart.exceptions import QueryParamsError
+from cart.exceptions import (QueryParamsError, NegativeQuantityException,
+ProductUnavailableException, ProductStockZeroException)
+
 from catshef.exceptions import ArgumentError
 
 from products.models import Product, ProductOption
 
+from django.http import Http404
 from django.shortcuts import get_object_or_404
-from decimal import Decimal
 
 def _parse_int(value, name='value'):
     try:
@@ -54,7 +57,6 @@ def _parse_bool(value, name='value'):
     return res
 
 
-
 def add_item_build_json_response(cart, product, options=[]):
     """
     Builds JSON response for items added to cart. If the item sepcified by
@@ -88,7 +90,8 @@ def parse_POST(request):
     if product_pk is None:
         raise QueryParamsError('product_pk not provided')
 
-    res['product'] = get_object_or_404(Product, pk=product_pk)
+    product = get_object_or_404(Product, pk=product_pk)
+    res['product'] = product
 
     # a little hack, since you can't instruct getlist() to return None,
     # -1 here acts as a None 
@@ -109,8 +112,7 @@ def parse_POST(request):
                                                     for pk in options_pks]
     else:
         # options were not passed, not even an empty list, so add with defaults
-        res['options'] = None  # avoids ifs in view
-        res['add_with_default_options'] = True
+        res['options'] = product.get_default_options()
 
     quantity = request.POST.get('quantity', 1)
     res['quantity'] = _parse_int(quantity)
@@ -118,3 +120,62 @@ def parse_POST(request):
     res['update_quantity'] = _parse_bool(update_quantity, 'update_quantity')
 
     return res
+
+def get_status_code(quantity, update_quantity):
+    """
+    Returns 201 if the cart was changed by addition, 304 otherwise.
+    """
+    return 304 if quantity == 0 and not update_quantity else 201
+
+def _dipatch_add_func(cart, post_data):
+    """
+    Dispatches cart.cart.Cart.add() or 
+    cart.cart.Cart.add_with_default_options(), depending from post_data.
+
+    Can rise any of the exceptions the two of the methods above do.
+    """
+    if post_data['add_with_default_options']:
+        cart.add_with_default_options(product=post_data['product'],
+            quantity=post_data['quantity'], 
+            update_quantity = post_data['update_quantity'])
+    else:
+        cart.add(product=post_data['product'], options=post_data['options'],
+            quantity=post_data['quantity'], 
+            update_quantity=post_data['update_quantity'])
+
+
+def add_to_cart_from_post_data(cart, post_data):    
+    """
+    Wrapper arroung cart.cart.Cart.add() and 
+    cart.cart.Cart.add_with_default_options() that calls the approptiate
+    function and returns the approptiate response dict, as well as status code.
+
+    This function is here to prevent putitng a lot of logic in the views.
+
+    Returns a tuple consisting of status code and response dictionary (in that
+    order).
+    """
+    message = None
+    try:
+        _dipatch_add_func(cart, post_data)
+        status_code = get_status_code(post_data['quantity'], 
+                                                post_data['update_quantity'])
+    except (NegativeQuantityException,
+        ProductUnavailableException, ProductStockZeroException) as ex:
+        status_code = 400
+        message = str(ex)
+    except Http404 as ex:
+        status_code = 404
+        message = str(ex)
+    except Exception as ex:
+        # some other error
+        status_code = 400
+        message = 'Error: ' + str(ex)
+
+    if status_code < 400:
+        res_dict = add_item_build_json_response(cart=cart, 
+            product=post_data['product'], options=post_data['options'])
+    else:
+        res_dict = {'message': message}
+
+    return (status_code, res_dict)

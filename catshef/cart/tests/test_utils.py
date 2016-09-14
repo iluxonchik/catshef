@@ -48,6 +48,14 @@ class UtilsTestCase(TestCase):
         cls.po1 = ProductOption.objects.create(name='option_3', price=1)
         cls.po2 = ProductOption.objects.create(name='option_4', price=2)
 
+        g1 = ProductOptionGroup.objects.create(name='group_1', 
+            type=ProductOptionGroup.CHECKBOX)
+        Membership.objects.create(option=cls.po1, group=g1,
+            default=True)
+        g1.products.add(cls.p1)
+
+
+
     def test_add_item_json_response(self):
         # Test getting product which is in cart
         self.cart.add(self.p1, quantity=3)
@@ -99,7 +107,6 @@ class UtilsTestCase(TestCase):
         self.assertCountEqual(res['options'], [self.po1, self.po2])
         self.assertEqual(res['quantity'], 22)
         self.assertEqual(res['update_quantity'], True)
-        self.assertEqual(res['add_with_default_options'], False)
 
         # now with 'true' as a string (also make sure product and option pks
         # as string work)
@@ -109,7 +116,6 @@ class UtilsTestCase(TestCase):
         self.request.POST['update_quantity'] = 'true'
         res = parse_POST(self.request)
         self.assertEqual(res['update_quantity'], True)
-        self.assertEqual(res['add_with_default_options'], False)
 
         self.assertEqual(res['product'], self.p1)
         self.assertCountEqual(res['options'], [self.po1, self.po2])
@@ -118,49 +124,41 @@ class UtilsTestCase(TestCase):
         self.request.POST['update_quantity'] = 1
         res = parse_POST(self.request)
         self.assertEqual(res['update_quantity'], True)
-        self.assertEqual(res['add_with_default_options'], False)
 
         # now with '1' as a string
         self.request.POST['update_quantity'] = '1'
         res = parse_POST(self.request)
         self.assertEqual(res['update_quantity'], True)
-        self.assertEqual(res['add_with_default_options'], False)
 
         # make sure True bool literal works too
         self.request.POST['update_quantity'] = True
         res = parse_POST(self.request)
         self.assertEqual(res['update_quantity'], True)
-        self.assertEqual(res['add_with_default_options'], False)        
 
         # now with 'False' as a string
         self.request.POST['update_quantity'] = 'False'
         res = parse_POST(self.request)
         self.assertEqual(res['update_quantity'], False)
-        self.assertEqual(res['add_with_default_options'], False)       
 
         # now with 'false' as a string
         self.request.POST['update_quantity'] = 'false'
         res = parse_POST(self.request)
         self.assertEqual(res['update_quantity'], False)
-        self.assertEqual(res['add_with_default_options'], False)
         
         # now with 0 as an int
         self.request.POST['update_quantity'] = 0
         res = parse_POST(self.request)
         self.assertEqual(res['update_quantity'], False)
-        self.assertEqual(res['add_with_default_options'], False)
 
         # now with '1' as a string
         self.request.POST['update_quantity'] = '0'
         res = parse_POST(self.request)
         self.assertEqual(res['update_quantity'], False)
-        self.assertEqual(res['add_with_default_options'], False)
 
         # make sure False bool literal works too
         self.request.POST['update_quantity'] = False
         res = parse_POST(self.request)
         self.assertEqual(res['update_quantity'], False)
-        self.assertEqual(res['add_with_default_options'], False)
 
         self.request.POST = QueryDict(mutable=True)
         self.request.POST['product_pk'] = 1
@@ -172,7 +170,6 @@ class UtilsTestCase(TestCase):
         self.assertCountEqual(res['options'], [])
         self.assertEqual(res['quantity'], 22)
         self.assertEqual(res['update_quantity'], False)
-        self.assertEqual(res['add_with_default_options'], False)
 
         self.request.POST = QueryDict(mutable=True)
         self.request.POST['product_pk'] = 1
@@ -180,11 +177,10 @@ class UtilsTestCase(TestCase):
         res = parse_POST(self.request)
         self.assertEqual(res['product'], self.p1)
         
-        self.assertIsNone(res['options'])
 
         self.assertEqual(res['quantity'], 1)
         self.assertEqual(res['update_quantity'], False)
-        self.assertEqual(res['add_with_default_options'], True)
+        self.assertCountEqual(res['options'], [self.po1])
 
     def test_parse_POST_errors(self):
         with self.assertRaises(Http404):
