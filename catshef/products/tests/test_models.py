@@ -628,3 +628,121 @@ class ProductOptionProductMembershipTestCase(TestCase):
         self.assertEqual(len(groups), 2)
         self.assertCountEqual(groups, [self.g1, self.g2])
 
+
+class DefaultProductOptionsTestCase(TestCase):
+    
+    def setUp(self):
+        self._setup_products()
+        self._setup_product_options()
+        self._setup_product_option_groups()
+        self._setup_memberships()
+        self._setup_product_groups()
+
+    def _setup_product_options(self):
+        self.po_1 = ProductOption.objects.create(name='option_1', price=12)
+        self.po_2 = ProductOption.objects.create(name='option_2', price=3.14159)
+        self.po_3 = ProductOption.objects.create(name='option_3',
+            price=2.678, description='Option 3')        
+        self.po_4 = ProductOption.objects.create(name='option_4',
+            price=3.98, description='Option 4')
+
+    def _setup_product_option_groups(self):
+        self.g1 = ProductOptionGroup.objects.create(name='group_1',
+            type=ProductOptionGroup.RADIO)
+        self.g2 = ProductOptionGroup.objects.create(name='group_2',
+            type=ProductOptionGroup.CHECKBOX)
+        self.g3 = ProductOptionGroup.objects.create(name='group_3',
+            type=ProductOptionGroup.CHECKBOX)
+        self.g4 = ProductOptionGroup.objects.create(name='group_4',
+            type=ProductOptionGroup.DROPDOWN)
+
+    def _setup_products(self):
+        self.p1 = Product.objects.create(
+            name='Turkey',
+            slug='turkey',
+            description='Just a turkey',
+            stock=120,
+            price=15,
+            offer_price=9,
+            available=True)
+
+        self.p2 = Product.objects.create(
+            name='Protein Powder',
+            slug='protein-powder',
+            description='Protein powder.',
+            stock=120,
+            price=10,
+            offer_price=5,
+            available=True)        
+
+        self.p3 = Product.objects.create(
+            name='Worm',
+            slug='worm',
+            description='Uhhh, yeah, it\'s a worm...',
+            stock=120,
+            price=19,
+            offer_price=9.7,
+            available=True)          
+
+        self.p4 = Product.objects.create(
+            name='Whiskas',
+            slug='whiskas',
+            description='That cat food',
+            stock=120,
+            price=19,
+            offer_price=9.7,
+            available=True)        
+
+    def _setup_memberships(self):
+        # g1
+        Membership.objects.create(option=self.po_1, group=self.g1, default=True)
+        Membership.objects.create(option=self.po_2, group=self.g1)
+        
+        # g2
+        Membership.objects.create(option=self.po_3, group=self.g2, default=False)
+        
+        # g3
+        Membership.objects.create(option=self.po_3, group=self.g3,
+            default=True)   
+
+        # g4
+        Membership.objects.create(option=self.po_3, group=self.g4,
+            default=True)
+        Membership.objects.create(option=self.po_4, group=self.g4,
+            default=False)
+        Membership.objects.create(option=self.po_4, group=self.g4,
+            default=False)
+
+
+
+    def _setup_product_groups(self):
+        self.g1.products.add(self.p1, self.p2)
+        self.g2.products.add(self.p1, self.p3)
+
+        self.g3.products.add(self.p2)
+        self.g4.products.add(self.p2)
+
+
+
+    def test_default_product_options(self):
+        """
+        Tests Product.get_default_options().
+        """
+
+        # one default option
+        options = self.p1.get_default_options()
+        self.assertCountEqual(options, (self.po_1,))        
+
+        # repeated default options
+        options = self.p2.get_default_options()
+        self.assertCountEqual(options, (self.po_1, self.po_3, self.po_3))
+
+        # product in a group, but no default options
+        options = self.p3.get_default_options()
+        self.assertCountEqual(options, [])
+
+        # product not in a group, therefore with no default options
+        options = self.p4.get_default_options()
+        self.assertCountEqual(options, [])
+
+
