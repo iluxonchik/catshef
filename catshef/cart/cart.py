@@ -50,6 +50,10 @@ class Cart(object):
                 the product is already in cart, its quantity will be incremented by
                 the `quantity` argument.
 
+        Returns:
+            True, if the cart was changed
+            False, if the cart was not changed
+
             NOTE: if update_quantity=True and quantity=0, the product will
             be **removed** from the cart: the **remove()** method will be
             called.
@@ -66,8 +70,8 @@ class Cart(object):
             return
 
         if not product.available:
-            raise ProductUnavailableException('"{}" product (pk={}) is not'
-                'avaiable and can\'t be added to the cart.'.format(product.name,
+            raise ProductUnavailableException('"{}" product (pk={}) is '
+                'unavailable and can\'t be added to the cart.'.format(product.name,
                     product.pk))
 
         if product.stock < 1:
@@ -97,7 +101,7 @@ class Cart(object):
             cart_product[key] = self._init_cart_product(product,
                 options, quantity)
             final_price_needs_update = False
-
+        
         if update_quantity:
             cart_product[key]['quantity'] = quantity
         else:
@@ -114,14 +118,7 @@ class Cart(object):
         Adds the product to the cart with all of its default options, in all
         groups which relate to this product.
         """
-        options = []
-        groups = product.groups.all()
-        for group in groups:
-            # get all memberships with that group that are "default"
-            memberships = Membership.objects.filter(group=group, default=True)
-            for m in memberships:
-                options.append(m.option)
-
+        options = product.get_default_options()
         self.add(product=product, options=options, 
             quantity=quantity, update_quantity=update_quantity)
 
@@ -334,5 +331,4 @@ class Cart(object):
             for key in product_cart:
                 item = product_cart[key]
                 item = self._complete_cart_product(product, key, item)
-                # import pdb; pdb.set_trace()
                 yield item

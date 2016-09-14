@@ -96,6 +96,16 @@ class Product(models.Model):
         """
         return [image.image.url for image in self.get_images()]
 
+    def get_default_options(self):
+        options = []
+        groups = self.groups.all()
+        for group in groups:
+            # get all memberships with that group that are "default"
+            memberships = Membership.objects.filter(group=group, default=True)
+            for m in memberships:
+                options.append(m.option)
+        return options
+
     def similar_products(self, manager=None, limit=None):
         if not manager:
             manager = Product.active
