@@ -82,9 +82,9 @@ def parse_POST(request):
     """
     Parse post args and retrieve the related product and options (if applies).
     """
-    res = { 'add_with_default_options' : False }
+    res = {}
+
     product_pk = request.POST.get('product_pk')
-    
     product_pk = _parse_int(product_pk, 'product_pk')
 
     if product_pk is None:
@@ -127,23 +127,6 @@ def get_status_code(quantity, update_quantity):
     """
     return 304 if quantity == 0 and not update_quantity else 201
 
-def _dipatch_add_func(cart, post_data):
-    """
-    Dispatches cart.cart.Cart.add() or 
-    cart.cart.Cart.add_with_default_options(), depending from post_data.
-
-    Can rise any of the exceptions the two of the methods above do.
-    """
-    if post_data['add_with_default_options']:
-        cart.add_with_default_options(product=post_data['product'],
-            quantity=post_data['quantity'], 
-            update_quantity = post_data['update_quantity'])
-    else:
-        cart.add(product=post_data['product'], options=post_data['options'],
-            quantity=post_data['quantity'], 
-            update_quantity=post_data['update_quantity'])
-
-
 def add_to_cart_from_post_data(cart, post_data):    
     """
     Wrapper arroung cart.cart.Cart.add() and 
@@ -157,7 +140,9 @@ def add_to_cart_from_post_data(cart, post_data):
     """
     message = None
     try:
-        _dipatch_add_func(cart, post_data)
+        cart.add(product=post_data['product'], options=post_data['options'],
+            quantity=post_data['quantity'], 
+            update_quantity=post_data['update_quantity'])
         status_code = get_status_code(post_data['quantity'], 
                                                 post_data['update_quantity'])
     except (NegativeQuantityException,
