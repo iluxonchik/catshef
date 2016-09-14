@@ -15,7 +15,11 @@ from django.conf import settings
 class SessionDict(dict):
     """
     Used to mock the session. It's a dict with an additional 'modified' bool 
-    attribute
+    attribute.
+
+    I'm aware that you shouldn't inherit from dict directly, but rather from
+    UserDict, this is however, is used for mocking and does not override any
+    methods.
     """
     modified = False
 

@@ -149,7 +149,7 @@ class BaseTestCase(TestCase):
 
         # just to test a repeated option in g1 and g4 (po1)
         Membership.objects.create(group=cls.g4, option=cls.po1, default=True)
-        cls.g3.products.add(cls.p4)
+        cls.g4.products.add(cls.p4)
 
 
 
@@ -235,7 +235,7 @@ class AddToCartViewTestCase(BaseTestCase):
         # Adding zero quantity of an item
         prev_price = cart.get_final_price()
         post_data = { 'product_pk' : self.p2.pk, 'options_pks' : '', 
-        'quantity' : 0, 'update_quantity' : True }
+        'quantity' : 0, 'update_quantity' : False }
 
         response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
         self.assertEqual(response.status_code, 304)  # 304 - Unchanged
@@ -243,18 +243,14 @@ class AddToCartViewTestCase(BaseTestCase):
         self.assertEqual(len(cart), 8)
 
         # make sure the response content has the expected JSON in it
-        expected = {
-            'quantity': 0,
-            'total_options_price': 0,
-            'total_final_price': 0,
-        }
+        # using previous 'expected' value, as it should be the same
         self.assertEqual(json.loads(str(response.content, 'utf-8')), expected, 'Unexpected '
             ' JSON returned')
         self.assertEqual(prev_price, cart.get_final_price())
 
         # Adding unavailable item
         prev_price = cart.get_final_price()
-        post_data = { 'product_pk' : self.p3_unav, 'options_pks' : [self.po1.pk], 
+        post_data = { 'product_pk' : self.p3_unav.pk, 'options_pks' : [self.po1.pk], 
         'quantity' : 2, 'update_quantity' : True }
 
         response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
@@ -352,7 +348,7 @@ class AddToCartViewTestCase(BaseTestCase):
         # make sure the response content has the expected JSON in it
         expected = {
             'quantity': 3,
-            'total_options_price': 0.12,
+            'total_options_price': 10,
             'total_final_price': 30.36,
         }
         self.assertEqual(json.loads(str(response.content, 'utf-8')), expected, 'Unexpected '
@@ -362,7 +358,7 @@ class AddToCartViewTestCase(BaseTestCase):
         # Adding zero quantity of an item
         prev_price = cart.get_final_price()
         post_data = { 'product_pk' : self.p2.pk, 'options_pks' : [self.po3.pk], 
-        'quantity' : 0, 'update_quantity' : True }
+        'quantity' : 0, 'update_quantity' : False }
 
         response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
         self.assertEqual(response.status_code, 304)  # 304 - Unchanged
@@ -370,18 +366,13 @@ class AddToCartViewTestCase(BaseTestCase):
         self.assertEqual(len(cart), 8)
 
         # make sure the response content has the expected JSON in it
-        expected = {
-            'quantity': 0,
-            'total_options_price': 0,
-            'total_final_price': 0,
-        }
         self.assertEqual(json.loads(str(response.content, 'utf-8')), expected, 'Unexpected '
             ' JSON returned')
         self.assertEqual(prev_price, cart.get_final_price())
 
         # Adding unavailable item
         prev_price = cart.get_final_price()
-        post_data = { 'product_pk' : self.p3_unav, 'options_pks' : [self.po1.pk], 
+        post_data = { 'product_pk' : self.p3_unav.pk, 'options_pks' : [self.po1.pk], 
         'quantity' : 2, 'update_quantity' : True }
 
         response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
@@ -497,11 +488,11 @@ class AddToCartViewTestCase(BaseTestCase):
         expected = {
             'quantity': 2,
             'total_options_price': 24.62,
-            'total_final_price': 57.44,
+            'total_final_price': 57.24,
         }
         self.assertEqual(json.loads(str(response.content, 'utf-8')), expected, 'Unexpected '
             ' JSON returned')
-        self.assertEqual(cart.get_final_price(), Decimal('103.64'))
+        self.assertEqual(cart.get_final_price(), Decimal('103.44'))
 
         # make sure the item was added
         item = cart._get_item(product=self.p4, options=(self.po1, self.po1))
@@ -527,7 +518,7 @@ class AddToCartViewTestCase(BaseTestCase):
         }
         self.assertEqual(json.loads(str(response.content, 'utf-8')), expected, 'Unexpected '
             ' JSON returned')
-        self.assertEqual(cart.get_final_price(), Decimal('71.44'))
+        self.assertEqual(cart.get_final_price(), Decimal('74.82'))
 
         # make sure the item was added
         item = cart._get_item(product=self.p4, options=(self.po1, self.po1))
@@ -554,7 +545,7 @@ class AddToCartViewTestCase(BaseTestCase):
         }
         self.assertEqual(json.loads(str(response.content, 'utf-8')), expected, 'Unexpected '
             ' JSON returned')
-        self.assertEqual(cart.get_final_price(), Decimal('42.82'))
+        self.assertEqual(cart.get_final_price(), Decimal('46.20'))
 
         # make sure the item was removed
         item = cart._get_item(product=self.p4, options=(self.po1, self.po1))

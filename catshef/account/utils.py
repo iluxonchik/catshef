@@ -8,7 +8,7 @@ from allauth.account.models import EmailAddress
 def is_email_verified(user=None, request=None):
     """
     Checks if the provided user has his email address verified.
-
+    
     If user is provided, request argument is ignored.
     """
     # TODO: write tests

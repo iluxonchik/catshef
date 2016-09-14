@@ -135,3 +135,4 @@ class RelatedProductsTestCase(CatShefBaseTestCase):
         with self.assertTemplateUsed('products/list_ajax.html'):
             response = product_related(request, 'chicken-breast')
             self.assertEqual(response.status_code, 200)
+
