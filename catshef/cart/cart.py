@@ -212,6 +212,16 @@ class Cart(object):
         """
         return self.get_final_price() + self.get_shipping_price()
 
+    def has_items(self):
+        """
+        Returns True if cart contains at least one item, false otherwise.
+
+        This method is useful when you need to know if the cart has items, but
+        don't want the potential overhead of going though the items, summing
+        the quantities, etc.
+        """
+        return len(self._cart) > 0
+
     def _update_product_total_final_price(self, product, options=None):
         """
         Updates the passed in product's (with possible options) item in cart

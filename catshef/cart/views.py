@@ -93,10 +93,18 @@ def remove_from_cart(request):
     else:
         raise Http404()  # 404 instead of 403 is here on purpose (https://tools.ietf.org/html/rfc7231.html#page-59)
 
-def clear_cart(self):
+def clear_cart(request):
     """
     Responsible for clearing the cart.
 
+    This view expects no data, just a POST request is enough.
+
     Request must be via POST (for security reasons)
     """
-    pass
+    if request.method == 'POST':
+        cart = Cart(request)
+        status_code = 204 if cart.has_items() else 304
+        cart.clear()
+        return HttpResponse(status=status_code)
+    else:
+        raise Http404()  # 404 instead of 403 is here on purpose (https://tools.ietf.org/html/rfc7231.html#page-59) 

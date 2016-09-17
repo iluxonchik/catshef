@@ -919,7 +919,7 @@ class ClearCartViewTestCase(BaseTestCase):
         # Add another product, this time with options
         post_data = { 
             'product_pk' : self.p2.pk, 
-            'options_pks' : [self.po1, self.po2], 
+            'options_pks' : [self.po1.pk, self.po2.pk], 
             'quantity' : 3, 
             'update_quantity' : True 
         }

@@ -302,6 +302,11 @@ class CartTestCase(TestCase):
         self.cart.clear()
         self.assertEqual(len(self.cart), 0)
 
+    def test_has_items(self):
+        self.assertFalse(self.cart.has_items())
+        self.cart.add(product=self.p1, options=(self.po1,), quantity=3)
+        self.assertTrue(self.cart.has_items())
+
     # Price testing
     # TODO: complete and change when coupon functionality is added
     def test_final_price(self):
