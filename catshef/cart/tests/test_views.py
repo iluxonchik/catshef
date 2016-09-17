@@ -168,6 +168,8 @@ class AddToCartViewTestCase(BaseTestCase):
 
         # make sure the response content has the expected JSON in it
         expected = {
+            'product_pk': self.p1.pk,
+            'options_pks': '',
             'quantity': 2,
             'total_options_price': 0,
             'total_final_price': 10,
@@ -187,6 +189,8 @@ class AddToCartViewTestCase(BaseTestCase):
 
         # make sure the response content has the expected JSON in it
         expected = {
+            'product_pk': self.p1.pk,
+            'options_pks': '',
             'quantity': 6,
             'total_options_price': 0,
             'total_final_price': 30,
@@ -206,6 +210,8 @@ class AddToCartViewTestCase(BaseTestCase):
         
         # make sure the response content has the expected JSON in it
         expected = {
+            'product_pk': self.p1.pk,
+            'options_pks': '',
             'quantity': 5,
             'total_options_price': 0,
             'total_final_price': 25,
@@ -225,6 +231,8 @@ class AddToCartViewTestCase(BaseTestCase):
 
         # make sure the response content has the expected JSON in it
         expected = {
+            'product_pk': self.p2.pk,
+            'options_pks': '',
             'quantity': 3,
             'total_options_price': 0,
             'total_final_price': 0.36,
@@ -289,6 +297,8 @@ class AddToCartViewTestCase(BaseTestCase):
 
         # make sure the response content has the expected JSON in it
         expected = {
+            'product_pk': self.p1.pk,
+            'options_pks': [self.po1.pk, self.po2.pk],
             'quantity': 2,
             'total_options_price': 15.45,
             'total_final_price': 40.9,
@@ -309,6 +319,8 @@ class AddToCartViewTestCase(BaseTestCase):
 
         # make sure the response content has the expected JSON in it
         expected = {
+            'product_pk': self.p1.pk,
+            'options_pks': [self.po1.pk, self.po2.pk],
             'quantity': 6,
             'total_options_price': 15.45,
             'total_final_price': 122.7,
@@ -329,6 +341,8 @@ class AddToCartViewTestCase(BaseTestCase):
 
         # make sure the response content has the expected JSON in it
         expected = {
+            'product_pk': self.p1.pk,
+            'options_pks': [self.po1.pk, self.po2.pk],
             'quantity': 5,
             'total_options_price': 15.45,
             'total_final_price': 102.25,
@@ -348,6 +362,8 @@ class AddToCartViewTestCase(BaseTestCase):
 
         # make sure the response content has the expected JSON in it
         expected = {
+            'product_pk': self.p2.pk,
+            'options_pks': [self.po3.pk],
             'quantity': 3,
             'total_options_price': 10,
             'total_final_price': 30.36,
@@ -408,6 +424,8 @@ class AddToCartViewTestCase(BaseTestCase):
 
         # make sure the response content has the expected JSON in it
         expected = {
+            'product_pk': self.p5.pk,
+            'options_pks': '',
             'quantity': 1,
             'total_options_price': 0,
             'total_final_price': 3.14,
@@ -434,6 +452,8 @@ class AddToCartViewTestCase(BaseTestCase):
 
         # make sure the response content has the expected JSON in it
         expected = {
+            'product_pk': self.p2.pk,
+            'options_pks': '',
             'quantity': 2,
             'total_options_price': 0,
             'total_final_price': 0.24,
@@ -457,6 +477,8 @@ class AddToCartViewTestCase(BaseTestCase):
 
         # make sure the response content has the expected JSON in it
         expected = {
+            'product_pk': self.p1.pk,
+            'options_pks': [self.po1.pk, self.po4.pk],
             'quantity': 2,
             'total_options_price': 16.41,
             'total_final_price': 42.82,
@@ -487,6 +509,8 @@ class AddToCartViewTestCase(BaseTestCase):
 
         # make sure the response content has the expected JSON in it
         expected = {
+            'product_pk': self.p4.pk,
+            'options_pks': [self.po1.pk, self.po1.pk],
             'quantity': 2,
             'total_options_price': 24.62,
             'total_final_price': 57.24,
@@ -513,6 +537,8 @@ class AddToCartViewTestCase(BaseTestCase):
 
         # make sure the response content has the expected JSON in it
         expected = {
+            'product_pk': self.p4.pk,
+            'options_pks': [self.po1.pk, self.po1.pk],
             'quantity': 1,
             'total_options_price': 24.62,
             'total_final_price': 28.62,
@@ -540,6 +566,8 @@ class AddToCartViewTestCase(BaseTestCase):
 
         # make sure the response content has the expected JSON in it
         expected = {
+            'product_pk': self.p4.pk,
+            'options_pks': [self.po1.pk, self.po1.pk],
             'quantity': 0,
             'total_options_price': 0,
             'total_final_price': 0,

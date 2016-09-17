@@ -25,7 +25,7 @@ def add_to_cart(request):
     Request POST data description:
         * product_pk (str or int): PK of product to be added.
         * options_pks (empty str or list of strs or list of ints): product 
-            options. If you want  to add a product without opttions explicitly, 
+            options. If you want  to add a product without options explicitly, 
             set this to an EMPTY STRING (''). If you want to provide options, 
             set this to a list of ints, where ints are PKs of options to be 
             added. If this parameter is omitted, prodcut will be added to cart 
@@ -39,6 +39,11 @@ def add_to_cart(request):
             (evaluate to True) and 'False', 'false', '0', 0 (evalueate to 
             False). Anything else will raise ArgumentError.
 
+    Returns:
+        Added data description, if data was added (even if 0 quantity was added)
+        JSON with a "message" key, which describes the error.
+
+    NOTE: any returned data can contain a "message" key
     """
     if request.method == 'POST':
         cart = Cart(request)
@@ -58,6 +63,21 @@ def remove_from_cart(self):
     Responsible for remobing items form cart.
 
     All data must be provided via POST(for security reasons).
+
+    Request POST data description:
+        * product_pk (str or int): PK of product to be removed.
+        * options_pks (empty str or list of strs or list of ints): product 
+            options. If you want  to remove a product without options explicitly, 
+            set this to an EMPTY STRING (''). If you want to provide options, 
+            set this to a list of ints, where ints are PKs of options. 
+            If this parameter is omitted, prodcut will be added to cart 
+            with its DEFAULT OPTIONS.
+
+    Returns:
+        Removed data description, if data was removed.
+        JSON with a "message" key, which describes the error.
+
+    NOTE: any returned data can contain a "message" key.
     """ 
     pass
 

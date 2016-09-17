@@ -57,7 +57,7 @@ def _parse_bool(value, name='value'):
     return res
 
 
-def add_item_build_json_response(cart, product, options=[]):
+def get_cart_item_json_response(cart, product, options=[]):
     """
     Builds JSON response for items added to cart. If the item sepcified by
     product and options is not found in the cart, the resulting JSON response
@@ -67,29 +67,22 @@ def add_item_build_json_response(cart, product, options=[]):
     res = {}
 
     item = cart._get_item(product=product, options=options)
+    
+    res['product_pk'] = product.pk
+    res['options_pks'] = ([option.pk for option in options] 
+                                                if len(options) > 0  else '')
     if item is not None:
         # item in cart
-        res['product_pk'] = product.pk
-        res['options_pks'] = ([option.pk for option in options] 
-                                                if len(options) > 0  else '')
         res['quantity'] = float(item['quantity'])
         res['total_options_price'] = float(item['total_options_price'])
         res['total_final_price'] = float(item['total_final_price'])
     else:
         # item not in cart
-        res['product_pk'] = ''
-        res['options_pks'] = ''
         res['quantity'] = 0
         res['total_options_price'] = 0
         res['total_final_price'] = 0
 
     return res
-
-def remove_item_build_json_response(cart, product, options=[]):
-    res = add_item_build_json_response(cart, product, options=[])
-    res['product_pk'] = product.pk
-    res['options_pks'] = ([option.pk for option in options] 
-                                                if len(options) > 0  else '')
 
 def parse_POST(request):
     """
@@ -171,7 +164,7 @@ def add_to_cart_from_post_data(cart, post_data):
         message = 'Error: ' + str(ex)
 
     if status_code < 400:
-        res_dict = add_item_build_json_response(cart=cart, 
+        res_dict = get_cart_item_json_response(cart=cart, 
             product=post_data['product'], options=post_data['options'])
     else:
         res_dict = {'message': message}

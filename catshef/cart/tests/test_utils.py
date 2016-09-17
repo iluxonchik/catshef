@@ -9,7 +9,7 @@ from catshef.exceptions import ArgumentError
 from cart.cart import Cart
 from products.models import (Product, ProductOption, ProductOptionGroup,
     Membership)
-from cart.utils import add_item_build_json_response, parse_POST
+from cart.utils import get_cart_item_json_response, parse_POST
 
 class RequestMock(object):
     """
@@ -56,7 +56,7 @@ class UtilsTestCase(TestCase):
 
 
 
-    def test_add_item_json_response(self):
+    def test_get_cart_item_json_response(self):
         # Test getting product which is in cart
         self.cart.add(self.p1, quantity=3)
         
@@ -68,7 +68,7 @@ class UtilsTestCase(TestCase):
             'total_final_price': 15,
         }
 
-        item = add_item_build_json_response(self.cart, self.p1)
+        item = get_cart_item_json_response(self.cart, self.p1)
         self.assertEqual(item, expected)
 
         # Test getting product with options which is in cart
@@ -82,15 +82,15 @@ class UtilsTestCase(TestCase):
             'total_final_price': 16,
         }
 
-        item = add_item_build_json_response(self.cart, product=self.p1,
+        item = get_cart_item_json_response(self.cart, product=self.p1,
             options=[self.po1, self.po2])
         self.assertEqual(item, expected)
 
         # Test getting a product not in cart
-        item = add_item_build_json_response(self.cart, product=self.p2)
+        item = get_cart_item_json_response(self.cart, product=self.p2)
 
         expected = {
-            'product_pk': '',
+            'product_pk': self.p2.pk,
             'options_pks': '',
             'quantity': 0,
             'total_options_price': 0,
@@ -98,8 +98,16 @@ class UtilsTestCase(TestCase):
         }
         self.assertEqual(expected, item)
         
-        item = add_item_build_json_response(self.cart, product=self.p1, 
+        item = get_cart_item_json_response(self.cart, product=self.p1, 
             options=[self.po1])
+
+        expected = {
+            'product_pk': self.p1.pk,
+            'options_pks': [self.po1.pk],
+            'quantity': 0,
+            'total_options_price': 0,
+            'total_final_price': 0,
+        }
         self.assertEqual(expected, item)
 
     def test_parse_POST(self):
