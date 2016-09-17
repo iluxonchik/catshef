@@ -9,7 +9,8 @@ be displayed as a snackbar to the user).
 import json
 
 from cart.cart import Cart
-from cart.utils import parse_POST, add_to_cart_from_post_data
+from cart.utils import (parse_add_to_cart_POST, parse_remove_from_cart_POST,
+    add_to_cart_from_post_data, remove_from_cart_from_post_data)
 
 from catshef.exceptions import ArgumentError
 
@@ -48,7 +49,7 @@ def add_to_cart(request):
     if request.method == 'POST':
         cart = Cart(request)
         try:
-            post = parse_POST(request)  # can raise Http404 or ArgumentError
+            post = parse_add_to_cart_POST(request)  # can raise Http404 or ArgumentError
         except ArgumentError as err:
             raise Http404(str(err))
 
@@ -58,7 +59,7 @@ def add_to_cart(request):
     else:
         raise Http404()  # 404 instead of 403 is here on purpose (https://tools.ietf.org/html/rfc7231.html#page-59)
 
-def remove_from_cart(self):
+def remove_from_cart(request):
     """
     Responsible for remobing items form cart.
 
@@ -79,7 +80,18 @@ def remove_from_cart(self):
 
     NOTE: any returned data can contain a "message" key.
     """ 
-    pass
+    if request.method == 'POST':
+        cart = Cart(request)
+        try:
+            post = parse_remove_from_cart_POST(request)  # can raise Http404 or ArgumentError
+        except ArgumentError as err:
+            raise Http404(str(err))
+
+        status_code, res_dict = remove_from_cart_from_post_data(cart, post)
+        return JsonResponse(res_dict, status=status_code)
+
+    else:
+        raise Http404()  # 404 instead of 403 is here on purpose (https://tools.ietf.org/html/rfc7231.html#page-59)
 
 def clear_cart(self):
     """

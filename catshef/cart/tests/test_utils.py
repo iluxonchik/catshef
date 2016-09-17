@@ -9,7 +9,8 @@ from catshef.exceptions import ArgumentError
 from cart.cart import Cart
 from products.models import (Product, ProductOption, ProductOptionGroup,
     Membership)
-from cart.utils import get_cart_item_json_response, parse_POST
+from cart.utils import (get_cart_item_json_response, parse_add_to_cart_POST,
+    parse_remove_from_cart_POST)
 
 class RequestMock(object):
     """
@@ -110,13 +111,13 @@ class UtilsTestCase(TestCase):
         }
         self.assertEqual(expected, item)
 
-    def test_parse_POST(self):
+    def test_parse_add_to_cart_POST(self):
         self.request.POST['product_pk'] = 1
         self.request.POST.setlist('options_pks', [1,2])
         self.request.POST['quantity'] = 22
         self.request.POST['update_quantity'] = 'True'
 
-        res = parse_POST(self.request)
+        res = parse_add_to_cart_POST(self.request)
         self.assertEqual(res['product'], self.p1)
         self.assertCountEqual(res['options'], [self.po1, self.po2])
         self.assertEqual(res['quantity'], 22)
@@ -128,7 +129,7 @@ class UtilsTestCase(TestCase):
         self.request.POST.setlist('options_pks', ['1','2'])
         
         self.request.POST['update_quantity'] = 'true'
-        res = parse_POST(self.request)
+        res = parse_add_to_cart_POST(self.request)
         self.assertEqual(res['update_quantity'], True)
 
         self.assertEqual(res['product'], self.p1)
@@ -136,42 +137,42 @@ class UtilsTestCase(TestCase):
 
         # now with 1 as an int
         self.request.POST['update_quantity'] = 1
-        res = parse_POST(self.request)
+        res = parse_add_to_cart_POST(self.request)
         self.assertEqual(res['update_quantity'], True)
 
         # now with '1' as a string
         self.request.POST['update_quantity'] = '1'
-        res = parse_POST(self.request)
+        res = parse_add_to_cart_POST(self.request)
         self.assertEqual(res['update_quantity'], True)
 
         # make sure True bool literal works too
         self.request.POST['update_quantity'] = True
-        res = parse_POST(self.request)
+        res = parse_add_to_cart_POST(self.request)
         self.assertEqual(res['update_quantity'], True)
 
         # now with 'False' as a string
         self.request.POST['update_quantity'] = 'False'
-        res = parse_POST(self.request)
+        res = parse_add_to_cart_POST(self.request)
         self.assertEqual(res['update_quantity'], False)
 
         # now with 'false' as a string
         self.request.POST['update_quantity'] = 'false'
-        res = parse_POST(self.request)
+        res = parse_add_to_cart_POST(self.request)
         self.assertEqual(res['update_quantity'], False)
         
         # now with 0 as an int
         self.request.POST['update_quantity'] = 0
-        res = parse_POST(self.request)
+        res = parse_add_to_cart_POST(self.request)
         self.assertEqual(res['update_quantity'], False)
 
         # now with '1' as a string
         self.request.POST['update_quantity'] = '0'
-        res = parse_POST(self.request)
+        res = parse_add_to_cart_POST(self.request)
         self.assertEqual(res['update_quantity'], False)
 
         # make sure False bool literal works too
         self.request.POST['update_quantity'] = False
-        res = parse_POST(self.request)
+        res = parse_add_to_cart_POST(self.request)
         self.assertEqual(res['update_quantity'], False)
 
         self.request.POST = QueryDict(mutable=True)
@@ -179,7 +180,7 @@ class UtilsTestCase(TestCase):
         self.request.POST['options_pks'] = ''
         self.request.POST['quantity'] = 22
 
-        res = parse_POST(self.request)
+        res = parse_add_to_cart_POST(self.request)
         self.assertEqual(res['product'], self.p1)
         self.assertCountEqual(res['options'], [])
         self.assertEqual(res['quantity'], 22)
@@ -188,7 +189,7 @@ class UtilsTestCase(TestCase):
         self.request.POST = QueryDict(mutable=True)
         self.request.POST['product_pk'] = 1
 
-        res = parse_POST(self.request)
+        res = parse_add_to_cart_POST(self.request)
         self.assertEqual(res['product'], self.p1)
         
 
@@ -196,14 +197,32 @@ class UtilsTestCase(TestCase):
         self.assertEqual(res['update_quantity'], False)
         self.assertCountEqual(res['options'], [self.po1])
 
-    def test_parse_POST_errors(self):
+    def test_remove_from_cart_POST(self):
+        """
+        Just a very basic test, since it just calls _parse_POST_basic,
+        which is already tested by test_parse_add_to_cart_POST
+        """
+        self.request.POST['product_pk'] = 1
+        self.request.POST.setlist('options_pks', [1,2])
+
+        res = parse_remove_from_cart_POST(self.request)
+        self.assertEqual(res['product'], self.p1)
+        self.assertCountEqual(res['options'], [self.po1, self.po2])
+        
+        with self.assertRaises(KeyError):
+            res['quantity']
+        
+        with self.assertRaises(KeyError):        
+            res['update_quantity']
+
+    def test_parse_add_to_cart_POST_errors(self):
         with self.assertRaises(Http404):
             self.request.POST['product_pk'] = 22
             self.request.POST.setlist('options_pks', [1,2])
             self.request.POST['quantity'] = 22
             self.request.POST['update_quantity'] = True
 
-            res = parse_POST(self.request)
+            res = parse_add_to_cart_POST(self.request)
         
         with self.assertRaises(Http404):
             self.request.POST['product_pk'] = 22
@@ -211,18 +230,18 @@ class UtilsTestCase(TestCase):
             self.request.POST['quantity'] = 22
             self.request.POST['update_quantity'] = True
 
-            res = parse_POST(self.request)
+            res = parse_add_to_cart_POST(self.request)
 
         with self.assertRaises(Http404):
             self.request.POST['product_pk'] = 1
             self.request.POST['quantity'] = 2
             self.request.POST['update_quantity'] = 123
 
-            res = parse_POST(self.request)
+            res = parse_add_to_cart_POST(self.request)
 
         with self.assertRaises(Http404):
             self.request.POST['product_pk'] = 1
             self.request.POST['quantity'] = 3
             self.request.POST['update_quantity'] = 'D.R.E.'
 
-            res = parse_POST(self.request)        
+            res = parse_add_to_cart_POST(self.request)        

@@ -34,8 +34,10 @@ class BaseTestCase(TestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
-        self.last_request = None
+        request = self.factory.post('/')
+        self.last_request = request
         self.last_session_dict = SessionDict()
+        request.session = self.last_session_dict
 
     @classmethod
     def setUpTestData(cls):
@@ -589,6 +591,9 @@ class AddToCartViewTestCase(BaseTestCase):
             response = add_to_cart(request)
 
 class RemoveFromCartViewTestCase(BaseTestCase):
+    """
+    Tests removing products from cart.
+    """
     def test_remove_product(self):
         # make sure removing a product from an empty cart works
         cart = self.get_cart()
@@ -596,7 +601,7 @@ class RemoveFromCartViewTestCase(BaseTestCase):
         self.assertEqual(cart.get_final_price(), Decimal(0))
         
         post_data = {'product_pk':self.p1.pk, 'options_pks': ''}
-        response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
+        response = self.post_ajax(remove_from_cart, self.CART_REMOVE_URL, post_data)
 
         cart = self.get_cart()
         self.assertEqual(len(cart), 0)
@@ -624,7 +629,7 @@ class RemoveFromCartViewTestCase(BaseTestCase):
         #----------------------------------------------------------------------
         # Now let's get to the actual product removal testing
         post_data = {'product_pk': self.p2.pk, 'options_pks' : ''}
-        reponse = self.post_ajax(remove_from_cart, 
+        response = self.post_ajax(remove_from_cart, 
             self.CART_REMOVE_URL, post_data)
         cart = self.get_cart()
         self.assertEqual(len(cart), 6)
@@ -640,11 +645,11 @@ class RemoveFromCartViewTestCase(BaseTestCase):
         self.assertEqual(json.loads(str(response.content, 'utf-8')), expected, 
             'Unexpected JSON returned')
         self.assertEqual(cart.get_final_price(), Decimal(30))
-        self.assertIsNone(cart._get_item(self.p2.pk))
+        self.assertIsNone(cart._get_item(self.p2))
 
         # Remove the other item too
         post_data = {'product_pk': self.p1.pk, 'options_pks' : ''}
-        reponse = self.post_ajax(remove_from_cart, 
+        response = self.post_ajax(remove_from_cart, 
             self.CART_REMOVE_URL, post_data)
 
         cart = self.get_cart()
@@ -653,7 +658,7 @@ class RemoveFromCartViewTestCase(BaseTestCase):
         expected = {
             'product_pk': self.p1.pk,
             'options_pks': '',
-            'quantity': 3,
+            'quantity': 6,
             'total_options_price': 0,
             'total_final_price': 30,
         }
@@ -661,7 +666,7 @@ class RemoveFromCartViewTestCase(BaseTestCase):
         self.assertEqual(json.loads(str(response.content, 'utf-8')), expected, 
             'Unexpected JSON returned')
         self.assertEqual(cart.get_final_price(), Decimal(0))
-        self.assertIsNone(cart._get_item(self.p1.pk))
+        self.assertIsNone(cart._get_item(self.p1))
 
     def test_remove_product_with_options(self):
         # make sure removing a product from an empty cart works
@@ -671,7 +676,8 @@ class RemoveFromCartViewTestCase(BaseTestCase):
         
         post_data = {'product_pk':self.p1.pk, 
                                     'options_pks': [self.po1.pk, self.po2.pk]}
-        response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
+        response = self.post_ajax(remove_from_cart, 
+            self.CART_REMOVE_URL, post_data)
 
         cart = self.get_cart()
         self.assertEqual(len(cart), 0)
@@ -822,7 +828,7 @@ class RemoveFromCartViewTestCase(BaseTestCase):
         
         post_data = {'product_pk':self.p1.pk, 
                                     'options_pks': [self.po1.pk, self.po2.pk]}
-        response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
+        response = self.post_ajax(remove_from_cart, self.CART_ADD_URL, post_data)
 
         cart = self.get_cart()
         self.assertEqual(len(cart), 0)
@@ -861,7 +867,7 @@ class RemoveFromCartViewTestCase(BaseTestCase):
         self.assertEqual(cart.get_final_price(), Decimal('113.18'))
 
         # And let's add one more, this one with a single option
-        post_data = { 'product_pk' : self.p7.pk, 'options_pks' : [self.po3], 
+        post_data = { 'product_pk' : self.p7.pk, 'options_pks' : [self.po3.pk], 
                                     'quantity' : 1, 'update_quantity' : False }
 
         response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
@@ -869,6 +875,20 @@ class RemoveFromCartViewTestCase(BaseTestCase):
         cart = self.get_cart()
         self.assertEqual(len(cart), 9)
         self.assertEqual(cart.get_final_price(), Decimal('128.18'))
+
+    
+    def test_remove_from_cart_GET_refused(self):
+        """
+        Make sure that GET requests are refused.
+        """
+        with self.assertRaises(Http404):
+            request = self.factory.get(self.CART_REMOVE_URL)
+            response = remove_from_cart(request)
+
+class ClearCartViewTestCase(BaseTestCase):
+    """
+    Test clearing the cart.
+    """
 
     def test_cart_clear(self):
         """
@@ -918,7 +938,7 @@ class RemoveFromCartViewTestCase(BaseTestCase):
         self.assertEqual(cart.get_final_price(), Decimal('140.94'))
 
         # Now let's clear the cart
-        reponse = self.post_ajax(clear_cart, self.CART_CLEAR_URL)
+        response = self.post_ajax(clear_cart, self.CART_CLEAR_URL)
         cart = self.get_cart()
         self.assertEqual(len(cart), 0)
 
@@ -933,14 +953,22 @@ class RemoveFromCartViewTestCase(BaseTestCase):
         self.assertEqual(response.status_code, 204)  # 204 - No Content
         self.assertEqual(cart.get_final_price(), Decimal(0))
         # make sure all products are gone
-        self.assertIsNone(cart._get_item(self.p1.pk))
-        self.assertIsNone(cart._get_item(self.p1.pk, 
+        self.assertIsNone(cart._get_item(self.p1))
+        self.assertIsNone(cart._get_item(self.p1, 
             options=[self.po1, self.po4]))
-        self.assertIsNone(cart._get_item(self.p2.pk, 
+        self.assertIsNone(cart._get_item(self.p2, 
             options=[self.po1, self.po2]))
 
         # Make sure that clearing the cart after it has been cleared works
-        reponse = self.post_ajax(clear_cart, self.CART_CLEAR_URL)
+        response = self.post_ajax(clear_cart, self.CART_CLEAR_URL)
         cart = self.get_cart()
         self.assertEqual(len(cart), 0)
+
+    def test_clear_cart_GET_refused(self):
+        """
+        Make sure that GET requests are refused.
+        """
+        with self.assertRaises(Http404):
+            request = self.factory.get(self.CART_CLEAR_URL)
+            response = clear_cart(request)
 

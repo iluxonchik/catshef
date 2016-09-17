@@ -124,6 +124,9 @@ class Cart(object):
 
 
     def remove(self, product, options=None):
+        """
+        Removes the product from cart.
+        """
         key = self._get_product_key(options)
         cart_product = self._cart.get(str(product.pk))
         if cart_product:
