@@ -11,6 +11,7 @@ from products.models import (Product, Category, ProductOption,
 from django.test import TestCase, RequestFactory
 from django.core.urlresolvers import reverse, resolve
 from django.conf import settings
+from django.http import Http404
 
 class BaseTestCase(TestCase):
     """
@@ -19,7 +20,7 @@ class BaseTestCase(TestCase):
     """
     AJAX_KWARG = {'HTTP_X_REQUESTED_WITH':'XMLHttpRequest'}
 
-    def post_ajax(self, func, path, data):
+    def post_ajax(self, func, path, data=None):
         request = self.factory.post(path, data=data, 
             **BaseTestCase.AJAX_KWARG)
         request.session = self.last_session_dict
@@ -555,4 +556,363 @@ class AddToCartViewTestCase(BaseTestCase):
         """
         Make sure that GET requests are refused.
         """
-        pass
+        with self.assertRaises(Http404):
+            request = self.factory.get(self.CART_ADD_URL)
+            response = add_to_cart(request)
+
+class RemoveFromCartViewTestCase(BaseTestCase):
+    def test_remove_product(self):
+        # make sure removing a product from an empty cart works
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 0)
+        self.assertEqual(cart.get_final_price(), Decimal(0))
+        
+        post_data = {'product_pk':self.p1.pk, 'options_pks': ''}
+        response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
+
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 0)
+        self.assertEqual(cart.get_final_price(), Decimal(0))
+        self.assertEqual(response.status_code, 304)
+
+        # Adding an availabe item: all good case
+        post_data = { 'product_pk' : self.p1.pk, 'options_pks' : '', 
+        'quantity' : 6, 'update_quantity' : False }
+        response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
+
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 6)
+        self.assertEqual(cart.get_final_price(), Decimal(30))
+
+        # Add another product
+        post_data = { 'product_pk' : self.p2.pk, 'options_pks' : '', 
+        'quantity' : 3, 'update_quantity' : True }
+        response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
+
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 9)
+        self.assertEqual(cart.get_final_price(), Decimal('30.36'))
+
+        #----------------------------------------------------------------------
+        # Now let's get to the actual product removal testing
+        post_data = {'product_pk': self.p2.pk, 'options_pks' : ''}
+        reponse = self.post_ajax(remove_from_cart, 
+            self.CART_REMOVE_URL, post_data)
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 6)
+
+        expected = {
+            'product_pk': self.p2.pk,
+            'options_pks': '',
+            'quantity': 3,
+            'total_options_price': 0,
+            'total_final_price': 0.36,
+        }
+        self.assertEqual(response.status_code, 204)  # 204 - No Content
+        self.assertEqual(json.loads(str(response.content, 'utf-8')), expected, 
+            'Unexpected JSON returned')
+        self.assertEqual(cart.get_final_price(), Decimal(30))
+        self.assertIsNone(cart._get_item(self.p2.pk))
+
+        # Remove the other item too
+        post_data = {'product_pk': self.p1.pk, 'options_pks' : ''}
+        reponse = self.post_ajax(remove_from_cart, 
+            self.CART_REMOVE_URL, post_data)
+
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 0)
+
+        expected = {
+            'product_pk': self.p1.pk,
+            'options_pks': '',
+            'quantity': 3,
+            'total_options_price': 0,
+            'total_final_price': 30,
+        }
+        self.assertEqual(response.status_code, 204)  # 204 - No Content
+        self.assertEqual(json.loads(str(response.content, 'utf-8')), expected, 
+            'Unexpected JSON returned')
+        self.assertEqual(cart.get_final_price(), Decimal(0))
+        self.assertIsNone(cart._get_item(self.p1.pk))
+
+    def test_remove_product_with_options(self):
+        # make sure removing a product from an empty cart works
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 0)
+        self.assertEqual(cart.get_final_price(), Decimal(0))
+        
+        post_data = {'product_pk':self.p1.pk, 
+                                    'options_pks': [self.po1.pk, self.po2.pk]}
+        response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
+
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 0)
+        self.assertEqual(cart.get_final_price(), Decimal(0))
+        self.assertEqual(response.status_code, 304)
+
+        # Adding an availabe item: all good case
+        post_data = { 'product_pk' : self.p1.pk, 'options_pks' : [self.po1.pk, 
+        self.po2.pk], 
+        'quantity' : 2, 'update_quantity' : False }
+        response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
+        
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 2)
+        self.assertEqual(cart.get_final_price(), Decimal('40.9'))
+
+        # Adding another product
+        post_data = { 'product_pk' : self.p2.pk, 'options_pks' : [self.po1.pk, 
+        self.po2.pk], 
+        'quantity' : 4, 'update_quantity' : False }
+
+        response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
+        
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 6)
+        self.assertEqual(cart.get_final_price(), Decimal('103.18'))        
+
+        # Adding another product, without any options
+        post_data = { 'product_pk' : self.p7.pk, 'options_pks' : '',
+        'quantity' : 2, 'update_quantity' : False }
+
+        response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
+        
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 8)
+        self.assertEqual(cart.get_final_price(), Decimal('113.18'))
+
+        # And let's add one more, this one with a single option
+        post_data = { 'product_pk' : self.p7.pk, 'options_pks' : [self.po3], 
+                                    'quantity' : 1, 'update_quantity' : False }
+
+        response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
+        
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 9)
+        self.assertEqual(cart.get_final_price(), Decimal('128.18'))
+
+        # ---------------------------------------------------------------------
+        # Now let's actually start removing items form the cart
+        self.assertIsNotNone(cart._get_item(self.p7, [self.po3]))
+        post_data = { 'product_pk': self.p7.pk, 'options_pks':[self.po3.pk] }
+        response = self.post_ajax(remove_from_cart, self.CART_REMOVE_URL, post_data)
+
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 8)
+        self.assertIsNone(cart._get_item(self.p7, [self.po3]))
+
+        # make sure the response content has the expected JSON in it
+        expected = {
+            'product_pk': self.p7.pk,
+            'options_pks': [self.po3],
+            'quantity': 1,
+            'total_options_price': 10,
+            'total_final_price': 15,
+        }
+        self.assertEqual(json.loads(str(response.content, 'utf-8')), expected, 
+            'Unexpected JSON returned')
+        self.assertEqual(response.status_code, 204)  # 204 - No Content
+        self.assertEqual(cart.get_final_price(), Decimal('113.18'))
+
+        # Let's try to remove the same item  again
+        prev_cart_len = len(cart)
+        prev_cart_price = cart.get_final_price()
+
+        post_data = { 'product_pk': self.p7.pk, 'options_pks':[self.po3.pk] }
+        response = self.post_ajax(remove_from_cart, self.CART_REMOVE_URL, post_data)
+        self.assertEqual(response.status_code, 304)
+        
+        cart = self.get_cart()
+        self.assertEqual(len(cart), prev_cart_len)
+        self.assertEqual(cart.get_final_price(), prev_cart_price)
+
+
+        # Removing another item
+        self.assertIsNotNone(cart._get_item(self.p1, [self.po1, self.po2]))
+        post_data = { 'product_pk': self.p1.pk, 
+                                'options_pks':[self.po1.pk, self.po2.pk] }
+        response = self.post_ajax(remove_from_cart, self.CART_REMOVE_URL, post_data)
+
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 6)
+        self.assertIsNone(cart._get_item(self.p1, [self.po1, self.po2]))
+
+        # make sure the response content has the expected JSON in it
+        expected = {
+            'product_pk': self.p1.pk,
+            'options_pks': [self.po1.pk, self.po2.pk],
+            'quantity': 2,
+            'total_options_price': 15.45,
+            'total_final_price': 40.9,
+        }
+        self.assertEqual(json.loads(str(response.content, 'utf-8')), expected, 
+            'Unexpected JSON returned')
+        self.assertEqual(response.status_code, 204)  # 204 - No Content
+        self.assertEqual(cart.get_final_price(), Decimal('72.82'))
+        
+        # Let's try to a non-existing item
+        prev_cart_len = len(cart)
+        prev_cart_price = cart.get_final_price()
+
+        post_data = { 'product_pk': self.p5.pk, 'options_pks':[self.po3.pk] }
+        response = self.post_ajax(remove_from_cart, self.CART_REMOVE_URL, post_data)
+        self.assertEqual(response.status_code, 304)
+        
+        cart = self.get_cart()
+        self.assertEqual(len(cart), prev_cart_len)
+        self.assertEqual(cart.get_final_price(), prev_cart_price)
+
+        # Removing another item, this one without any options
+        self.assertIsNotNone(cart._get_item(self.p7))
+        post_data = { 'product_pk': self.p7.pk, 
+                                'options_pks' : '' }
+        response = self.post_ajax(remove_from_cart, self.CART_REMOVE_URL, post_data)
+
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 6)
+        self.assertIsNone(cart._get_item(self.p7))
+
+        # make sure the response content has the expected JSON in it
+        expected = {
+            'product_pk': self.p7.pk,
+            'options_pks': '',
+            'quantity': 2,
+            'total_options_price': 0,
+            'total_final_price': 10,
+        }
+        self.assertEqual(json.loads(str(response.content, 'utf-8')), expected, 
+            'Unexpected JSON returned')
+        self.assertEqual(response.status_code, 204)  # 204 - No Content
+        self.assertEqual(cart.get_final_price(), Decimal('72.82'))
+
+
+    def test_remove_product_with_options(self):
+        # make sure removing a product from an empty cart works
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 0)
+        self.assertEqual(cart.get_final_price(), Decimal(0))
+        
+        post_data = {'product_pk':self.p1.pk, 
+                                    'options_pks': [self.po1.pk, self.po2.pk]}
+        response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
+
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 0)
+        self.assertEqual(cart.get_final_price(), Decimal(0))
+        self.assertEqual(response.status_code, 304)
+
+        # Adding an availabe item: all good case
+        post_data = { 'product_pk' : self.p1.pk, 'options_pks' : [self.po1.pk, 
+        self.po2.pk], 
+        'quantity' : 2, 'update_quantity' : False }
+        response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
+        
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 2)
+        self.assertEqual(cart.get_final_price(), Decimal('40.9'))
+
+        # Adding another product
+        post_data = { 'product_pk' : self.p2.pk, 'options_pks' : [self.po1.pk, 
+        self.po2.pk], 
+        'quantity' : 4, 'update_quantity' : False }
+
+        response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
+        
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 6)
+        self.assertEqual(cart.get_final_price(), Decimal('103.18'))        
+
+        # Adding another product, without any options
+        post_data = { 'product_pk' : self.p7.pk, 'options_pks' : '',
+        'quantity' : 2, 'update_quantity' : False }
+
+        response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
+        
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 8)
+        self.assertEqual(cart.get_final_price(), Decimal('113.18'))
+
+        # And let's add one more, this one with a single option
+        post_data = { 'product_pk' : self.p7.pk, 'options_pks' : [self.po3], 
+                                    'quantity' : 1, 'update_quantity' : False }
+
+        response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
+        
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 9)
+        self.assertEqual(cart.get_final_price(), Decimal('128.18'))
+
+    def test_cart_clear(self):
+        """
+        Testing the cart's clear() method. Adds the same products as 
+        test_remove_product_with_options().
+        """
+        # make sure that clearing an empty cart works
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 0)
+        self.assertEqual(cart.get_final_price(), Decimal(0))
+        
+        response = self.post_ajax(clear_cart, self.CART_CLEAR_URL)
+
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 0)
+        self.assertEqual(cart.get_final_price(), Decimal(0))
+        self.assertEqual(response.status_code, 304)
+
+        # Adding a product without options
+        post_data = { 'product_pk' : self.p1.pk, 'options_pks' : '', 
+        'quantity' : 6, 'update_quantity' : False }
+        response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
+
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 6)
+        self.assertEqual(cart.get_final_price(), Decimal(30))
+
+        # Add another product, this time with options
+        post_data = { 
+            'product_pk' : self.p2.pk, 
+            'options_pks' : [self.po1, self.po2], 
+            'quantity' : 3, 
+            'update_quantity' : True 
+        }
+        response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
+
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 9)
+        self.assertEqual(cart.get_final_price(), Decimal('76.71'))
+
+        # Add another product, this time with default opitons
+        post_data = { 'product_pk':self.p1.pk, 'quantity' : 3 }
+        response = self.post_ajax(add_to_cart, self.CART_ADD_URL, post_data)
+
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 12)
+        self.assertEqual(cart.get_final_price(), Decimal('140.94'))
+
+        # Now let's clear the cart
+        reponse = self.post_ajax(clear_cart, self.CART_CLEAR_URL)
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 0)
+
+        # NOTE about expected
+        # Not returning anything to avoid calculations. This might be changed
+        # later, when cart caching is implemented, but since it's not a crutial
+        # feature at the moment (and it isn't that complex), it will not be
+        # implemented for now.
+        # The idea for this API is to only be REST-ish, since it won't really
+        # be used that way.
+
+        self.assertEqual(response.status_code, 204)  # 204 - No Content
+        self.assertEqual(cart.get_final_price(), Decimal(0))
+        # make sure all products are gone
+        self.assertIsNone(cart._get_item(self.p1.pk))
+        self.assertIsNone(cart._get_item(self.p1.pk, 
+            options=[self.po1, self.po4]))
+        self.assertIsNone(cart._get_item(self.p2.pk, 
+            options=[self.po1, self.po2]))
+
+        # Make sure that clearing the cart after it has been cleared works
+        reponse = self.post_ajax(clear_cart, self.CART_CLEAR_URL)
+        cart = self.get_cart()
+        self.assertEqual(len(cart), 0)
+
