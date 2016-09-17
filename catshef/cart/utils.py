@@ -57,7 +57,7 @@ def _parse_bool(value, name='value'):
     return res
 
 
-def add_item_build_json_response(cart, product, options=[]):
+def get_cart_item_json_response(cart, product, options=[]):
     """
     Builds JSON response for items added to cart. If the item sepcified by
     product and options is not found in the cart, the resulting JSON response
@@ -67,24 +67,30 @@ def add_item_build_json_response(cart, product, options=[]):
     res = {}
 
     item = cart._get_item(product=product, options=options)
+    
+    res['product_pk'] = product.pk
+    res['options_pks'] = ([option.pk for option in options] 
+                                                if len(options) > 0  else '')
     if item is not None:
+        # item in cart
         res['quantity'] = float(item['quantity'])
         res['total_options_price'] = float(item['total_options_price'])
         res['total_final_price'] = float(item['total_final_price'])
     else:
+        # item not in cart
         res['quantity'] = 0
         res['total_options_price'] = 0
         res['total_final_price'] = 0
 
     return res
 
-def parse_POST(request):
+def _parse_POST_basic(request):
     """
     Parse post args and retrieve the related product and options (if applies).
     """
-    res = { 'add_with_default_options' : False }
+    res = {}
+
     product_pk = request.POST.get('product_pk')
-    
     product_pk = _parse_int(product_pk, 'product_pk')
 
     if product_pk is None:
@@ -114,6 +120,11 @@ def parse_POST(request):
         # options were not passed, not even an empty list, so add with defaults
         res['options'] = product.get_default_options()
 
+    return res
+
+def parse_add_to_cart_POST(request):
+    res = _parse_POST_basic(request)
+
     quantity = request.POST.get('quantity', 1)
     res['quantity'] = _parse_int(quantity)
     update_quantity = request.POST.get('update_quantity', False)
@@ -121,28 +132,14 @@ def parse_POST(request):
 
     return res
 
-def get_status_code(quantity, update_quantity):
+def parse_remove_from_cart_POST(request):    
+    return _parse_POST_basic(request)
+
+def get_add_to_cart_status_code(quantity, update_quantity):
     """
     Returns 201 if the cart was changed by addition, 304 otherwise.
     """
     return 304 if quantity == 0 and not update_quantity else 201
-
-def _dipatch_add_func(cart, post_data):
-    """
-    Dispatches cart.cart.Cart.add() or 
-    cart.cart.Cart.add_with_default_options(), depending from post_data.
-
-    Can rise any of the exceptions the two of the methods above do.
-    """
-    if post_data['add_with_default_options']:
-        cart.add_with_default_options(product=post_data['product'],
-            quantity=post_data['quantity'], 
-            update_quantity = post_data['update_quantity'])
-    else:
-        cart.add(product=post_data['product'], options=post_data['options'],
-            quantity=post_data['quantity'], 
-            update_quantity=post_data['update_quantity'])
-
 
 def add_to_cart_from_post_data(cart, post_data):    
     """
@@ -157,8 +154,10 @@ def add_to_cart_from_post_data(cart, post_data):
     """
     message = None
     try:
-        _dipatch_add_func(cart, post_data)
-        status_code = get_status_code(post_data['quantity'], 
+        cart.add(product=post_data['product'], options=post_data['options'],
+            quantity=post_data['quantity'], 
+            update_quantity=post_data['update_quantity'])
+        status_code = get_add_to_cart_status_code(post_data['quantity'], 
                                                 post_data['update_quantity'])
     except (NegativeQuantityException,
         ProductUnavailableException, ProductStockZeroException) as ex:
@@ -173,9 +172,26 @@ def add_to_cart_from_post_data(cart, post_data):
         message = 'Error: ' + str(ex)
 
     if status_code < 400:
-        res_dict = add_item_build_json_response(cart=cart, 
+        res_dict = get_cart_item_json_response(cart=cart, 
             product=post_data['product'], options=post_data['options'])
     else:
         res_dict = {'message': message}
 
+    return (status_code, res_dict)
+
+def remove_from_cart_from_post_data(cart, post_data):
+    """
+    Wrapper arroung cart.cart.Cart.remove() that 
+    returns the approptiate response dict, as well as status code.
+
+    This function is here to prevent putitng a lot of logic in the views.
+
+    Returns a tuple consisting of status code and response dictionary (in that
+    order).
+    """
+    res_dict = get_cart_item_json_response(cart, post_data['product'], 
+        post_data['options'])
+    was_present = res_dict['quantity'] > 0
+    cart.remove(post_data['product'], options=post_data['options'])
+    status_code = 204 if was_present else 304
     return (status_code, res_dict)

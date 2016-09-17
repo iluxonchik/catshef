@@ -22,3 +22,7 @@ tests/report/
 
 # Project-specific
 media/
+
+# Coverage.py
+.coverage
+htmlcov
