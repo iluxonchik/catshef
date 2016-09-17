@@ -68,15 +68,28 @@ def add_item_build_json_response(cart, product, options=[]):
 
     item = cart._get_item(product=product, options=options)
     if item is not None:
+        # item in cart
+        res['product_pk'] = product.pk
+        res['options_pks'] = ([option.pk for option in options] 
+                                                if len(options) > 0  else '')
         res['quantity'] = float(item['quantity'])
         res['total_options_price'] = float(item['total_options_price'])
         res['total_final_price'] = float(item['total_final_price'])
     else:
+        # item not in cart
+        res['product_pk'] = ''
+        res['options_pks'] = ''
         res['quantity'] = 0
         res['total_options_price'] = 0
         res['total_final_price'] = 0
 
     return res
+
+def remove_item_build_json_response(cart, product, options=[]):
+    res = add_item_build_json_response(cart, product, options=[])
+    res['product_pk'] = product.pk
+    res['options_pks'] = ([option.pk for option in options] 
+                                                if len(options) > 0  else '')
 
 def parse_POST(request):
     """

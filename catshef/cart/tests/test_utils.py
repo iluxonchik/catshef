@@ -61,6 +61,8 @@ class UtilsTestCase(TestCase):
         self.cart.add(self.p1, quantity=3)
         
         expected = {
+            'product_pk': self.p1.pk,
+            'options_pks': '',
             'quantity': 3,
             'total_options_price': 0,
             'total_final_price': 15,
@@ -73,6 +75,8 @@ class UtilsTestCase(TestCase):
         self.cart.add(self.p1, quantity=2, options=[self.po1, self.po2])
         
         expected = {
+            'product_pk': self.p1.pk,
+            'options_pks': [self.po1.pk, self.po2.pk],
             'quantity': 2,
             'total_options_price': 3,
             'total_final_price': 16,
@@ -86,6 +90,8 @@ class UtilsTestCase(TestCase):
         item = add_item_build_json_response(self.cart, product=self.p2)
 
         expected = {
+            'product_pk': '',
+            'options_pks': '',
             'quantity': 0,
             'total_options_price': 0,
             'total_final_price': 0,
